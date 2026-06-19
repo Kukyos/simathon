@@ -54,3 +54,28 @@ code:not(pre code) {
 }
 .callout.warn  { border-color: #ff6a3d; }
 .callout.check { border-color: #5cffa1; }
+
+/* subtle "lift on hover" everywhere we apply it */
+.lift {
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+.lift:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 106, 61, 0.4);
+  box-shadow: 0 12px 32px -16px rgba(255, 106, 61, 0.45);
+}
+
+/* selection accent */
+::selection { background: rgba(255, 106, 61, 0.35); color: #fff; }
+
+/* scrollbar polish (webkit) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.16); }
+
+/* admin badge pulse */
+@keyframes adminGlow {
+  0%, 100% { box-shadow: 0 0 18px -4px rgba(167, 139, 250, 0.6); }
+  50%      { box-shadow: 0 0 26px -2px rgba(167, 139, 250, 0.9); }
+}
+.admin-glow { animation: adminGlow 2.4s ease-in-out infinite; }

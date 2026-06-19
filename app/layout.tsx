@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import LastVisitedTracker from "@/components/LastVisitedTracker";
+import BgParticles from "@/components/BgParticles";
 
 export const dynamic = "force-dynamic";
 
@@ -14,16 +15,17 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen flex">
+      <body className="min-h-screen flex relative">
+        <BgParticles />
         <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 relative">
           <MobileNav />
           <LastVisitedTracker />
-          <main className="flex-1 w-full max-w-3xl px-5 md:px-10 py-8 md:py-12">
+          <main className="flex-1 w-full max-w-5xl mx-auto px-5 md:px-12 py-8 md:py-12">
             {children}
           </main>
           <footer className="border-t border-white/5">
-            <div className="max-w-3xl px-5 md:px-10 py-5 text-xs text-muted flex flex-wrap gap-3 justify-between">
+            <div className="max-w-5xl mx-auto px-5 md:px-12 py-5 text-xs text-muted flex flex-wrap gap-3 justify-between">
               <div>
                 built by{" "}
                 <a

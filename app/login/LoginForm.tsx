@@ -19,6 +19,13 @@ export default function LoginForm() {
         `Sign-in didn't complete: ${urlError}. Try requesting a new link, and click it in the same browser you requested it from.`,
       );
     }
+    // Pre-fill the last email used on this device. One-tap re-login.
+    try {
+      const saved = localStorage.getItem("simathon:last_email");
+      if (saved) setEmail(saved);
+    } catch {
+      /* ignore */
+    }
   }, [urlError]);
 
   async function send(e: React.FormEvent) {
@@ -64,6 +71,11 @@ export default function LoginForm() {
       setState("error");
       setError(signErr.message);
       return;
+    }
+    try {
+      localStorage.setItem("simathon:last_email", cleaned);
+    } catch {
+      /* ignore */
     }
     setState("sent");
   }

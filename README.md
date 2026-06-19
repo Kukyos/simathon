@@ -1,88 +1,91 @@
 # Workshop site
 
-One-day Taichi workshop + week-long hackathon, in one site. Deploys to Vercel,
-backed by Supabase for auth, chat, and submissions.
+One-day Taichi workshop + week-long hackathon. Deploys to Vercel, backed by Supabase
+for auth, chat, phase tracking, and submissions.
 
-## What's in the box
+## Pages
 
-- **Landing** (`/`) — the pitch
-- **Setup** (`/setup`) — pre-workshop install guide
-- **Workshop** (`/workshop`) — the full tutorial (this IS the recording)
-- **Hackathon** (`/hackathon`) — rules, theme, judging, prizes
-- **Submit** (`/submit`) — authenticated submission form (one per user, editable)
-- **Gallery** (`/gallery`) — everyone's submissions
-- **Chat** (`/chat`) — realtime Q&A
-- **Login** (`/login`) — magic-link, gated by email allowlist
+- `/` — personalized handbook home (shows your phase progress when signed in)
+- `/login` — magic-link sign-in, pre-fills last-used email
+- `/onboard` — captures name + platform + GPU after first login (forced once)
+- `/setup` — installs (Python + Cursor)
+- `/workshop` — master prompt + idea gallery
+- `/phase/1` — setup verification (upload screenshot)
+- `/phase/2` — first sim running (upload screenshot/clip)
+- `/hackathon` — rules + judging + prizes
+- `/submit` — locked until both phases approved
+- `/gallery` and `/gallery/[id]` — public showcase
+- `/participants` — live roster, who's signed in, who's submitted
+- `/chat` — realtime room, 5s rate limit, purple glow on admin messages
+- `/admin` — admin-only: review pending phases, add/remove participants, toggle admin flag
 
-## First-time deploy (do this once)
+## First-time deploy
 
-### 1. Supabase (~5 min)
+### 1. Supabase project
 
-1. Make an account at [supabase.com](https://supabase.com), create a new project. Pick the region closest to India (e.g. Mumbai).
-2. Open **SQL Editor** → paste the contents of `supabase/schema.sql` → run.
-3. Open **Authentication → Providers → Email** → make sure "Enable Email provider" is on. Disable "Confirm email" (we use magic links, not signup confirmations).
-4. **Authentication → URL Configuration**:
-   - Site URL: `https://your-vercel-url.vercel.app`
-   - Redirect URLs: add `https://your-vercel-url.vercel.app/auth/callback` and `http://localhost:3000/auth/callback`
-5. **Project Settings → API** → copy the `Project URL` and the `anon` public key. You'll need them in step 3.
+1. Make a Supabase project. Mumbai region.
+2. SQL editor → run each migration in order:
+   - `supabase/schema.sql`
+   - `supabase/migrations/002_participants.sql`
+   - `supabase/migrations/003_phases_admin_chat.sql`
+   - `supabase/migrations/004_storage.sql`
+3. Authentication → Providers → Email — on. Confirm-email — off.
+4. Authentication → URL Configuration:
+   - Site URL: `https://<vercel-url>`
+   - Redirect URLs: `https://<vercel-url>/auth/callback`
 
-### 2. Add your roster
+### 2. Make yourself the first admin
 
-Once Yuvika sends the participant email list, paste it in via SQL Editor:
+Run in SQL editor:
 
 ```sql
-insert into public.allowed_emails (email, full_name) values
-  ('participant1@example.com', 'Name One'),
-  ('participant2@example.com', 'Name Two')
-on conflict (email) do nothing;
+insert into public.allowed_emails (email, full_name, is_admin)
+values ('amohamedarmaan@gmail.com', 'Armaan', true)
+on conflict (email) do update set is_admin = true;
 ```
 
-Don't forget your own email so you can test:
+From here you can promote others from the `/admin` page (no more SQL needed).
 
-```sql
-insert into public.allowed_emails (email, full_name)
-values ('amohamedarmaan@gmail.com', 'Armaan')
-on conflict (email) do nothing;
+### 3. Vercel
+
+Env vars:
+
 ```
-
-### 3. Vercel (~3 min)
-
-1. Push this folder to a GitHub repo.
-2. Go to [vercel.com](https://vercel.com), import the repo.
-3. Add three environment variables:
-   - `NEXT_PUBLIC_SUPABASE_URL` → from Supabase step 5
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` → from Supabase step 5
-   - `NEXT_PUBLIC_SITE_URL` → your `https://...vercel.app` URL
-4. Deploy.
-5. Go back to Supabase → Authentication → URL Configuration → make sure the live Vercel URL is in there.
+NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
+NEXT_PUBLIC_SITE_URL=https://<vercel-url>
+```
 
 ## Local dev
 
 ```bash
-cd workshop-site
-cp .env.example .env.local   # fill in the Supabase values
 npm install
+cp .env.example .env.local   # fill in
 npm run dev
 ```
 
-Visit http://localhost:3000.
+## How the moving parts fit
 
-## Day-of-workshop checklist
-
-- [ ] Roster loaded in `allowed_emails`
-- [ ] Test login flow with your own email
-- [ ] Send participants the site URL + a one-liner: "log in with the email you registered with"
-- [ ] Open `/chat` on a second monitor so you can see questions roll in
-- [ ] Have the workshop page open in a tab — that's your teleprompter
+- Auth state lives in Supabase cookies. Middleware refreshes them on every request,
+  so sessions are persistent until they hit the Supabase token TTL (~30 days).
+- The middleware forces logged-in users without a `profiles` row to `/onboard`.
+- Phase RPCs (`review_phase`, `admin_add_participant`, etc.) check the admin flag
+  inside the function — there is no client-side trust.
+- Chat posts go through `post_message()` which enforces the 5s rate limit server-side.
+- Phase proof uploads go to the `phase_proofs` storage bucket. The RLS policy on
+  the bucket pins uploads to a folder named after the user's email.
 
 ## Tweaks you'll probably want
 
-- Workshop dates: hardcoded text in `app/page.tsx` and `app/hackathon/page.tsx` — find the date strings and replace.
-- Prize split: `app/hackathon/page.tsx`.
-- Tutorial content (`app/workshop/page.tsx`) — proof-read the physics constants and tune them on your machine before the live session.
+- Workshop dates: search for `[[TBD]]` in `app/hackathon/page.tsx`.
+- Number of phases: edit `lib/phases.ts`. SQL constraint allows up to 3 — bump if you want more.
+- Rate limit window: `interval '5 seconds'` in `003_phases_admin_chat.sql` (post_message function).
+- Master prompt: top of `app/workshop/page.tsx`.
 
-## Notes
+## Notes (intentional shortcuts)
 
-- The allowlist gate is enforced at the Postgres RLS layer. Even if someone gets a magic link, they cannot read or write any table unless their email is in `allowed_emails`.
-- One submission per user, enforced by a unique constraint on `submissions.user_email`. The submit form upserts, so editing is just re-submitting.
-- The chat is a single global room, by design. Threads + DMs are scope creep for a 1-week event.
+- One submission per user (unique constraint on `user_email`).
+- Phase track is hardcoded to 2 phases. Bump `lib/phases.ts` + the SQL check.
+- Chat is a single global room. No threads, no DMs.
+- File uploads cap at whatever Supabase's default is (~50 MB). Tighten if needed.
+- The participants page polls every 15s. Swap to a realtime subscription if you want true live presence.

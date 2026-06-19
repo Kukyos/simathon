@@ -11,7 +11,7 @@ export default async function ChatPage() {
 
   const { data: initial } = await supabase
     .from("messages")
-    .select("id,user_email,display_name,content,created_at")
+    .select("id,user_email,display_name,content,is_admin,created_at")
     .order("created_at", { ascending: false })
     .limit(100);
 

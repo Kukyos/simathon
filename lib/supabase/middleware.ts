@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
+const GATED_PREFIXES = ["/chat", "/submit", "/gallery", "/participants", "/phase", "/admin", "/onboard"];
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -22,18 +24,30 @@ export async function updateSession(request: NextRequest) {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-
   const path = request.nextUrl.pathname;
-  const gated =
-    path.startsWith("/chat") ||
-    path.startsWith("/submit") ||
-    path.startsWith("/gallery") ||
-    path.startsWith("/participants");
+  const gated = GATED_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
+
   if (gated && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", path);
     return NextResponse.redirect(url);
   }
+
+  // Force onboarding once, until the profile exists.
+  if (user && path !== "/onboard" && !path.startsWith("/auth") && !path.startsWith("/login")) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_email")
+      .eq("user_email", user.email!.toLowerCase())
+      .maybeSingle();
+    if (!profile) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/onboard";
+      url.searchParams.set("next", path);
+      return NextResponse.redirect(url);
+    }
+  }
+
   return response;
 }

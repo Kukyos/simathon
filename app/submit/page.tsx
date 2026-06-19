@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { PHASES } from "@/lib/phases";
 import SubmitForm from "./SubmitForm";
 
 export const metadata = { title: "Submit · Hackathon" };
@@ -9,20 +11,69 @@ export default async function SubmitPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/submit");
 
+  const myEmail = user.email!.toLowerCase();
+
+  const { data: phases } = await supabase
+    .from("phase_progress")
+    .select("phase,status")
+    .eq("user_email", myEmail);
+
+  const statusByPhase: Record<number, string> = {};
+  (phases ?? []).forEach((p) => (statusByPhase[p.phase] = p.status));
+  const allApproved = PHASES.every((p) => statusByPhase[p.n] === "approved");
+
   const { data: existing } = await supabase
     .from("submissions")
     .select("*")
-    .eq("user_email", user.email!.toLowerCase())
+    .eq("user_email", myEmail)
     .maybeSingle();
 
+  if (!allApproved) {
+    return (
+      <div>
+        <div className="text-xs uppercase tracking-[0.2em] text-accent2">submission</div>
+        <h1 className="text-3xl font-bold mt-1">Locked.</h1>
+        <p className="text-ink/80 mt-2 text-[15px]">
+          Final submission opens once both phases are approved by an admin. Finish them first.
+        </p>
+
+        <ul className="mt-6 space-y-2">
+          {PHASES.map((p) => {
+            const s = statusByPhase[p.n];
+            const tone =
+              s === "approved"
+                ? "border-green-500/40 text-green-300"
+                : s === "pending"
+                  ? "border-yellow-500/40 text-yellow-300"
+                  : s === "rejected"
+                    ? "border-red-500/40 text-red-300"
+                    : "border-white/10 text-ink/75";
+            return (
+              <li key={p.n}>
+                <Link
+                  href={`/phase/${p.n}`}
+                  className={`flex items-center gap-3 rounded-lg border px-3 py-2 hover:bg-white/5 transition ${tone}`}
+                >
+                  <span className="text-xs font-mono">phase {p.n}</span>
+                  <span className="text-sm flex-1">{p.title}</span>
+                  <span className="text-xs">{s || "not started"}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  }
+
   return (
-    <div className="prose-body max-w-2xl mx-auto">
-      <div className="text-xs uppercase tracking-[0.2em] text-accent2">submission</div>
-      <h1 className="text-4xl font-extrabold mt-1">Submit your sim</h1>
-      <p className="text-ink/85 mt-2 text-sm">
-        Submitting as <span className="text-ink">{user.email}</span>. You can edit this anytime until the deadline.
+    <div className="max-w-2xl">
+      <div className="text-xs uppercase tracking-[0.2em] text-accent2">submission · unlocked</div>
+      <h1 className="text-3xl font-bold mt-1">Submit your sim</h1>
+      <p className="text-ink/80 mt-2 text-sm">
+        Submitting as <span className="text-ink">{user.email}</span>. Edit anytime until the deadline.
       </p>
-      <SubmitForm initial={existing ?? null} userEmail={user.email!.toLowerCase()} />
+      <SubmitForm initial={existing ?? null} userEmail={myEmail} />
     </div>
   );
 }

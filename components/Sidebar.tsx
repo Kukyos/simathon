@@ -13,12 +13,19 @@ const SECTIONS: { label: string; links: { href: string; label: string; n?: strin
     ],
   },
   {
+    label: "your progress",
+    links: [
+      { href: "/phase/1", label: "Phase 1 · Setup check" },
+      { href: "/phase/2", label: "Phase 2 · First sim" },
+      { href: "/submit", label: "Submit" },
+    ],
+  },
+  {
     label: "community",
     links: [
       { href: "/chat", label: "Chat" },
       { href: "/participants", label: "Participants" },
       { href: "/gallery", label: "Gallery" },
-      { href: "/submit", label: "Submit your sim" },
     ],
   },
 ];
@@ -26,14 +33,19 @@ const SECTIONS: { label: string; links: { href: string; label: string; n?: strin
 export default async function Sidebar() {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
+  let isAdmin = false;
+  if (user) {
+    const { data } = await supabase.rpc("am_i_admin");
+    isAdmin = !!data;
+  }
 
   return (
-    <aside className="hidden md:flex w-[240px] shrink-0 border-r border-white/5 flex-col h-screen sticky top-0 bg-bg/60">
-      <div className="px-5 pt-5 pb-3">
+    <aside className="hidden md:flex w-[260px] shrink-0 border-r border-white/5 flex-col h-screen sticky top-0 bg-bg/70 backdrop-blur">
+      <div className="px-5 pt-5 pb-3 flex items-center gap-2">
         <Link href="/" className="text-sm font-semibold tracking-tight text-ink hover:text-accent">
           simathon
         </Link>
-        <div className="text-[10px] uppercase tracking-[0.2em] text-muted mt-0.5">handbook</div>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-muted">handbook</span>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pt-2 pb-4 space-y-5">
@@ -47,10 +59,15 @@ export default async function Sidebar() {
                 <li key={l.href}>
                   <Link
                     href={l.href}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded text-sm text-ink/80 hover:bg-white/5 hover:text-ink transition"
+                    className="group flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-ink/80 hover:bg-white/5 hover:text-ink hover:translate-x-0.5 transition"
                   >
-                    {l.n && <span className="text-[10px] font-mono text-muted w-5">{l.n}</span>}
-                    {!l.n && <span className="w-5" />}
+                    {l.n ? (
+                      <span className="text-[10px] font-mono text-muted w-5 group-hover:text-accent">
+                        {l.n}
+                      </span>
+                    ) : (
+                      <span className="w-5" />
+                    )}
                     <span>{l.label}</span>
                   </Link>
                 </li>
@@ -58,6 +75,25 @@ export default async function Sidebar() {
             </ul>
           </div>
         ))}
+
+        {isAdmin && (
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-violet-300 px-2 mb-1.5">
+              admin
+            </div>
+            <ul className="space-y-0.5">
+              <li>
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-violet-200 hover:bg-violet-500/10 transition"
+                >
+                  <span className="w-5">⚙</span>
+                  <span>Control room</span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+        )}
       </nav>
 
       <div className="border-t border-white/5 p-3">

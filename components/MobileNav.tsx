@@ -5,9 +5,11 @@ const LINKS = [
   { href: "/", label: "Home" },
   { href: "/setup", label: "Setup" },
   { href: "/workshop", label: "Build" },
+  { href: "/phase/1", label: "Phase 1" },
+  { href: "/phase/2", label: "Phase 2" },
   { href: "/hackathon", label: "Hackathon" },
   { href: "/chat", label: "Chat" },
-  { href: "/participants", label: "Participants" },
+  { href: "/participants", label: "People" },
   { href: "/gallery", label: "Gallery" },
   { href: "/submit", label: "Submit" },
 ];
