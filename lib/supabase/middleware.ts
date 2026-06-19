@@ -34,14 +34,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Force onboarding once, until the profile exists.
+  // Force onboarding once. Admins are exempt.
   if (user && path !== "/onboard" && !path.startsWith("/auth") && !path.startsWith("/login")) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("user_email")
-      .eq("user_email", user.email!.toLowerCase())
-      .maybeSingle();
-    if (!profile) {
+    const { data: needs } = await supabase.rpc("needs_onboarding");
+    if (needs === true) {
       const url = request.nextUrl.clone();
       url.pathname = "/onboard";
       url.searchParams.set("next", path);

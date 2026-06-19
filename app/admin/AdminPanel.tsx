@@ -27,7 +27,6 @@ export default function AdminPanel({
   const [tab, setTab] = useState<Tab>(pending.length ? "reviews" : "people");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [addEmail, setAddEmail] = useState("");
-  const [addName, setAddName] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
 
   async function review(id: string, status: "approved" | "rejected") {
@@ -44,17 +43,37 @@ export default function AdminPanel({
   async function addParticipant(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
+    const clean = addEmail.trim().toLowerCase();
+    if (!clean) return;
     const { error } = await supabase.rpc("admin_add_participant", {
-      p_email: addEmail.trim().toLowerCase(),
-      p_name: addName.trim() || addEmail.split("@")[0],
+      p_email: clean,
+      p_name: null,
     });
     if (error) setMsg(error.message);
     else {
+      setMsg(`✓ added ${clean} — they can now sign in and onboard.`);
       setAddEmail("");
-      setAddName("");
-      setMsg(`added ${addEmail}`);
       startTransition(() => router.refresh());
     }
+  }
+
+  async function addMany(raw: string) {
+    setMsg(null);
+    const emails = raw
+      .split(/[,\s\n]+/)
+      .map((e) => e.trim().toLowerCase())
+      .filter((e) => /.+@.+\..+/.test(e));
+    if (!emails.length) return;
+    let ok = 0;
+    for (const email of emails) {
+      const { error } = await supabase.rpc("admin_add_participant", {
+        p_email: email,
+        p_name: null,
+      });
+      if (!error) ok++;
+    }
+    setMsg(`✓ added ${ok} / ${emails.length}`);
+    startTransition(() => router.refresh());
   }
 
   async function removeParticipant(email: string) {
@@ -162,32 +181,53 @@ export default function AdminPanel({
       {/* People */}
       {tab === "people" && (
         <section className="mt-5 space-y-6">
-          {/* Add */}
-          <form onSubmit={addParticipant} className="rounded-xl border border-white/10 bg-panel/40 p-3 flex flex-wrap gap-2 items-end">
-            <div className="flex-1 min-w-[180px]">
-              <label className="text-xs text-muted">email</label>
-              <input
-                required
-                type="email"
-                value={addEmail}
-                onChange={(e) => setAddEmail(e.target.value)}
-                placeholder="someone@example.com"
-                className="w-full mt-0.5 rounded bg-bg border border-white/10 px-2.5 py-1.5 text-sm focus:outline-none focus:border-accent"
-              />
-            </div>
-            <div className="flex-1 min-w-[120px]">
-              <label className="text-xs text-muted">name (optional)</label>
-              <input
-                value={addName}
-                onChange={(e) => setAddName(e.target.value)}
-                placeholder="Name"
-                className="w-full mt-0.5 rounded bg-bg border border-white/10 px-2.5 py-1.5 text-sm focus:outline-none focus:border-accent"
-              />
-            </div>
-            <button type="submit" className="px-3 py-1.5 rounded bg-accent text-black text-sm font-semibold">
-              add participant
-            </button>
-          </form>
+          {/* Add — email only. They fill in their name during onboarding. */}
+          <div className="rounded-xl border border-white/10 bg-panel/40 p-3 space-y-3">
+            <form onSubmit={addParticipant} className="flex flex-wrap gap-2 items-end">
+              <div className="flex-1 min-w-[200px]">
+                <label className="text-xs text-muted">add one email</label>
+                <input
+                  required
+                  type="email"
+                  value={addEmail}
+                  onChange={(e) => setAddEmail(e.target.value)}
+                  placeholder="someone@example.com"
+                  className="w-full mt-0.5 rounded bg-bg border border-white/10 px-2.5 py-1.5 text-sm focus:outline-none focus:border-accent"
+                />
+              </div>
+              <button type="submit" className="px-3 py-1.5 rounded bg-accent text-black text-sm font-semibold">
+                add
+              </button>
+            </form>
+
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted hover:text-ink">
+                paste a list (comma, space, or newline separated)
+              </summary>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const t = (e.currentTarget.elements.namedItem("bulk") as HTMLTextAreaElement)?.value ?? "";
+                  addMany(t);
+                  (e.currentTarget.elements.namedItem("bulk") as HTMLTextAreaElement).value = "";
+                }}
+                className="mt-2 flex gap-2 flex-col"
+              >
+                <textarea
+                  name="bulk"
+                  rows={3}
+                  placeholder="a@x.com, b@y.com&#10;c@z.com"
+                  className="w-full rounded bg-bg border border-white/10 px-2.5 py-1.5 text-sm focus:outline-none focus:border-accent"
+                />
+                <button
+                  type="submit"
+                  className="self-end px-3 py-1 rounded bg-accent/15 border border-accent/40 text-accent text-xs font-semibold"
+                >
+                  bulk add
+                </button>
+              </form>
+            </details>
+          </div>
 
           {/* Table */}
           <ul className="rounded-xl border border-white/10 bg-panel/40 divide-y divide-white/5 overflow-hidden">

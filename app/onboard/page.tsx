@@ -13,14 +13,9 @@ export default async function OnboardPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: existing } = await supabase
-    .from("profiles")
-    .select("user_email")
-    .eq("user_email", user.email!.toLowerCase())
-    .maybeSingle();
-
-  // Already onboarded — skip the form, go where they were headed.
-  if (existing) redirect(searchParams.next || "/setup");
+  const { data: needs } = await supabase.rpc("needs_onboarding");
+  // Already onboarded (or admin) — skip the form.
+  if (needs === false) redirect(searchParams.next || "/setup");
 
   return (
     <div className="max-w-lg mx-auto pt-6">

@@ -34,11 +34,10 @@ export default function OnboardForm({
     e.preventDefault();
     setBusy(true);
     setErr("");
-    const { error } = await supabaseBrowser().from("profiles").upsert({
-      user_email: userEmail,
-      full_name: name.trim(),
-      platform,
-      has_gpu: gpu === "yes" ? true : gpu === "no" ? false : null,
+    const { error } = await supabaseBrowser().rpc("upsert_my_profile", {
+      p_full_name: name.trim(),
+      p_platform: platform,
+      p_has_gpu: gpu === "yes" ? true : gpu === "no" ? false : null,
     });
     setBusy(false);
     if (error) {
