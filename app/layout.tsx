@@ -17,16 +17,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-screen flex relative">
-        {/* Background: subtle dotfield (cursor-reactive) + low-opacity physics clutter */}
-        <div className="fixed inset-0 -z-10 pointer-events-none">
+        {/* Background: subtle dotfield, only over the content column (skip sidebar) */}
+        <div className="fixed top-0 right-0 bottom-0 left-0 md:left-[260px] -z-10 pointer-events-none">
           <DotField
-            dotRadius={1}
-            dotSpacing={22}
-            bulgeStrength={28}
-            glowRadius={140}
-            gradientFrom="rgba(124, 92, 255, 0.16)"
-            gradientTo="rgba(255, 106, 61, 0.10)"
-            glowColor="rgba(124, 92, 255, 0.35)"
+            dotRadius={1.2}
+            dotSpacing={20}
+            bulgeStrength={40}
+            glowRadius={160}
+            gradientFrom="rgba(124, 92, 255, 0.45)"
+            gradientTo="rgba(255, 106, 61, 0.32)"
+            glowColor="rgba(124, 92, 255, 0.5)"
           />
         </div>
         <PhysicsClutter />

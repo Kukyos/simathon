@@ -4,6 +4,8 @@ import { useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import Stepper, { Step } from "@/components/Stepper";
 
+// ponytail: step-aware Next gating. Step 2 needs name. Step 4 is save → gate on busy.
+
 const PLATFORMS = [
   { v: "windows", label: "Windows", icon: "⊞" },
   { v: "mac",     label: "macOS",   icon: "" },
@@ -28,6 +30,11 @@ export default function OnboardForm({
   const [gpu, setGpu] = useState<string>("dunno");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [step, setStep] = useState(1);
+
+  const nextDisabled =
+    busy ||
+    (step === 2 && name.trim().length === 0); // only the name step actually requires input
 
   async function save() {
     setBusy(true);
@@ -65,10 +72,11 @@ export default function OnboardForm({
   return (
     <Stepper
       initialStep={1}
+      onStepChange={setStep}
       onFinalStepCompleted={save}
       backButtonText="back"
       nextButtonText="next"
-      nextButtonProps={{ disabled: busy || (name.trim().length === 0) }}
+      nextButtonProps={{ disabled: nextDisabled }}
     >
       <Step>
         <div className="text-xs uppercase tracking-[0.2em] text-accent2">welcome</div>

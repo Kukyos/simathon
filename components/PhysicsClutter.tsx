@@ -18,7 +18,7 @@ const FORMULAS = [
 
 export default function PhysicsClutter() {
   return (
-    <div className="pointer-events-none fixed inset-0 -z-[5] overflow-hidden select-none">
+    <div className="pointer-events-none fixed top-0 right-0 bottom-0 left-0 md:left-[260px] -z-[5] overflow-hidden select-none">
       {FORMULAS.map((f, i) => (
         <span
           key={i}
