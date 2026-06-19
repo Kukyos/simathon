@@ -97,12 +97,8 @@ const DotField = memo(function DotField({
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      sizeRef.current = {
-        w,
-        h,
-        offsetX: rect.left + window.scrollX,
-        offsetY: rect.top + window.scrollY,
-      };
+      // ponytail: viewport-relative since container is `fixed`. clientX/Y math below.
+      sizeRef.current = { w, h, offsetX: rect.left, offsetY: rect.top };
       buildDots(w, h);
     }
 
@@ -127,8 +123,9 @@ const DotField = memo(function DotField({
 
     function onMouseMove(e: MouseEvent) {
       const s = sizeRef.current;
-      mouseRef.current.x = e.pageX - s.offsetX;
-      mouseRef.current.y = e.pageY - s.offsetY;
+      // clientX/Y so the glow tracks the cursor even when the page scrolls.
+      mouseRef.current.x = e.clientX - s.offsetX;
+      mouseRef.current.y = e.clientY - s.offsetY;
     }
 
     function updateMouseSpeed() {

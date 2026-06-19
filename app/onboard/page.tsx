@@ -14,7 +14,10 @@ export default async function OnboardPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Hardcoded admin OR DB-flagged admin (via am_i_admin RPC) → skip onboarding entirely.
   if (isAdminEmail(user.email)) redirect(searchParams.next || "/setup");
+  const { data: dbAdmin } = await supabase.rpc("am_i_admin");
+  if (dbAdmin === true) redirect(searchParams.next || "/setup");
 
   const { data: existing } = await supabase
     .from("profiles")

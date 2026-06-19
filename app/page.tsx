@@ -8,7 +8,6 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser();
 
   let firstName: string | null = null;
-  let needsProfile = false;
   let phaseStatus: Record<number, string> = {};
   let hasSubmitted = false;
 
@@ -20,7 +19,6 @@ export default async function Home() {
       supabase.from("submissions").select("id").eq("user_email", myEmail).maybeSingle(),
     ]);
     firstName = profile?.full_name ?? null;
-    needsProfile = !profile;
     (phases ?? []).forEach((p) => (phaseStatus[p.phase] = p.status));
     hasSubmitted = !!sub;
   }
@@ -45,21 +43,6 @@ export default async function Home() {
       <div className="mt-4">
         <ResumePill />
       </div>
-
-      {/* Soft nudge if signed in without a profile yet */}
-      {user && needsProfile && (
-        <div className="mt-6 rounded-lg border border-accent2/40 bg-accent2/10 p-4 text-sm flex items-center justify-between gap-3 flex-wrap">
-          <div className="text-ink/90">
-            One last thing — tell us your name + setup. Takes 20 seconds.
-          </div>
-          <Link
-            href="/onboard"
-            className="px-3 py-1.5 rounded-md bg-accent text-black font-semibold text-sm"
-          >
-            finish onboarding
-          </Link>
-        </div>
-      )}
 
       {/* Logged-out CTA */}
       {!user && (

@@ -37,10 +37,29 @@ export default function ChatRoom({
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
         (payload) => {
-          setMessages((m) => [...m, payload.new as Message]);
+          const incoming = payload.new as Message;
+          setMessages((m) => {
+            if (m.some((x) => x.id === incoming.id)) return m;
+            // If this is the realtime echo of our own optimistic message, swap the temp row
+            // (negative id, same email + content) for the real one. Otherwise just append.
+            const tempIdx = m.findIndex(
+              (x) =>
+                x.id < 0 &&
+                x.user_email.toLowerCase() === incoming.user_email.toLowerCase() &&
+                x.content === incoming.content,
+            );
+            if (tempIdx >= 0) {
+              const copy = m.slice();
+              copy[tempIdx] = incoming;
+              return copy;
+            }
+            return [...m, incoming];
+          });
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status !== "SUBSCRIBED") console.warn("[chat] realtime status:", status);
+      });
     return () => {
       supabase.removeChannel(channel);
     };
@@ -73,14 +92,33 @@ export default function ChatRoom({
 
     setSending(true);
     setErr(null);
+
+    // Optimistic insert so user sees their message instantly even if realtime is slow.
+    // Negative id can't collide with the bigserial PK; gets replaced when realtime echoes back.
+    const tempId = -Date.now();
+    const optimistic: Message = {
+      id: tempId,
+      user_email: userEmail,
+      display_name: null,
+      content,
+      is_admin: null,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((m) => [...m, optimistic]);
+    setInput("");
+
     const { error } = await supabase.rpc("post_message", { p_content: content });
     setSending(false);
 
     if (error) {
+      // Roll back the optimistic insert.
+      setMessages((m) => m.filter((x) => x.id !== tempId));
+      setInput(content);
+      console.error("[chat] post_message failed:", error);
       if (error.message.includes("rate_limited")) {
         setErr("hold on, that's too fast");
       } else if (error.message.includes("not_allowlisted")) {
-        setErr("your email isn't on the roster");
+        setErr("your email isn't on the roster — ask an admin to add you");
       } else {
         setErr(error.message);
       }
@@ -88,7 +126,6 @@ export default function ChatRoom({
     }
     lastSentRef.current = Date.now();
     setCooldown(RATE_LIMIT_MS);
-    setInput("");
   }
 
   return (
