@@ -16,10 +16,12 @@ const RATE_LIMIT_MS = 5000;
 
 export default function ChatRoom({
   userEmail,
+  displayName,
   isAdmin,
   initialMessages,
 }: {
   userEmail: string;
+  displayName: string;
   isAdmin: boolean;
   initialMessages: Message[];
 }) {
@@ -96,38 +98,32 @@ export default function ChatRoom({
 
     setSending(true);
     setErr(null);
-
-    // Optimistic insert so user sees their message instantly even if realtime is slow.
-    // Negative id can't collide with the bigserial PK; gets replaced when realtime echoes back.
-    const tempId = -Date.now();
-    const optimistic: Message = {
-      id: tempId,
-      user_email: userEmail,
-      display_name: null,
-      content,
-      is_admin: null,
-      created_at: new Date().toISOString(),
-    };
-    setMessages((m) => [...m, optimistic]);
     setInput("");
 
-    const { error } = await supabase.rpc("post_message", { p_content: content });
+    // Direct insert — RLS allows authenticated. Returns the inserted row so we can
+    // append the real id and confirm persistence. No optimistic flicker.
+    const { data: inserted, error } = await supabase
+      .from("messages")
+      .insert({
+        user_email: userEmail,
+        display_name: displayName,
+        content,
+        is_admin: isAdmin,
+      })
+      .select("id,user_email,display_name,content,is_admin,created_at")
+      .single();
+
     setSending(false);
 
-    if (error) {
-      // Roll back the optimistic insert.
-      setMessages((m) => m.filter((x) => x.id !== tempId));
+    if (error || !inserted) {
       setInput(content);
-      console.error("[chat] post_message failed:", error);
-      if (error.message.includes("rate_limited")) {
-        setErr("hold on, that's too fast");
-      } else if (error.message.includes("not_allowlisted")) {
-        setErr("your email isn't on the roster — ask an admin to add you");
-      } else {
-        setErr(error.message);
-      }
+      console.error("[chat] insert failed:", error);
+      setErr(error?.message ?? "couldn't send");
       return;
     }
+
+    // Append immediately (realtime echo will be deduped by id).
+    setMessages((m) => (m.some((x) => x.id === inserted.id) ? m : [...m, inserted as Message]));
     if (!isAdmin) {
       lastSentRef.current = Date.now();
       setCooldown(RATE_LIMIT_MS);

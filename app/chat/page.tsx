@@ -10,15 +10,22 @@ export default async function ChatPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/chat");
 
-  const [{ data: initial }, { data: dbAdmin }] = await Promise.all([
+  const myEmail = user.email!.toLowerCase();
+  const [{ data: initial }, { data: dbAdmin }, { data: profile }, { data: roster }] = await Promise.all([
     supabase
       .from("messages")
       .select("id,user_email,display_name,content,is_admin,created_at")
       .order("created_at", { ascending: false })
       .limit(100),
     supabase.rpc("am_i_admin"),
+    supabase.from("profiles").select("full_name").eq("user_email", myEmail).maybeSingle(),
+    supabase.from("allowed_emails").select("full_name").eq("email", myEmail).maybeSingle(),
   ]);
   const isAdmin = dbAdmin === true || isAdminEmail(user.email);
+  const displayName =
+    profile?.full_name?.trim() ||
+    roster?.full_name?.trim() ||
+    myEmail.split("@")[0];
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -29,7 +36,8 @@ export default async function ChatPage() {
         No question is too small.
       </p>
       <ChatRoom
-        userEmail={user.email!.toLowerCase()}
+        userEmail={myEmail}
+        displayName={displayName}
         isAdmin={isAdmin}
         initialMessages={(initial ?? []).reverse()}
       />
