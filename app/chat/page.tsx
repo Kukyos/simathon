@@ -1,0 +1,29 @@
+import { redirect } from "next/navigation";
+import { supabaseServer } from "@/lib/supabase/server";
+import ChatRoom from "./ChatRoom";
+
+export const metadata = { title: "Chat · Workshop Q&A" };
+
+export default async function ChatPage() {
+  const supabase = supabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login?next=/chat");
+
+  const { data: initial } = await supabase
+    .from("messages")
+    .select("id,user_email,display_name,content,created_at")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  return (
+    <div className="max-w-3xl mx-auto">
+      <div className="text-xs uppercase tracking-[0.2em] text-accent2">live Q&A</div>
+      <h1 className="text-3xl font-extrabold mt-1 mb-1">Chat</h1>
+      <p className="text-sm text-muted mb-5">
+        Stuck on setup, on the workshop, or building your sim? Ask here. Armaan + everyone else can answer.
+        No question is too small.
+      </p>
+      <ChatRoom userEmail={user.email!.toLowerCase()} initialMessages={(initial ?? []).reverse()} />
+    </div>
+  );
+}
