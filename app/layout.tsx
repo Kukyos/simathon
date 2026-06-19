@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import LastVisitedTracker from "@/components/LastVisitedTracker";
-import BgParticles from "@/components/BgParticles";
+import DotField from "@/components/DotField";
+import PhysicsClutter from "@/components/PhysicsClutter";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-screen flex relative">
-        <BgParticles />
+        {/* Background: subtle dotfield (cursor-reactive) + low-opacity physics clutter */}
+        <div className="fixed inset-0 -z-10 pointer-events-none">
+          <DotField
+            dotRadius={1}
+            dotSpacing={22}
+            bulgeStrength={28}
+            glowRadius={140}
+            gradientFrom="rgba(124, 92, 255, 0.16)"
+            gradientTo="rgba(255, 106, 61, 0.10)"
+            glowColor="rgba(124, 92, 255, 0.35)"
+          />
+        </div>
+        <PhysicsClutter />
+
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0 relative">
           <MobileNav />
