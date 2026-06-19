@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 const PLATFORMS = [
@@ -23,7 +22,6 @@ export default function OnboardForm({
   userEmail: string;
   next: string;
 }) {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [platform, setPlatform] = useState<string>("windows");
   const [gpu, setGpu] = useState<string>("dunno");
@@ -34,18 +32,43 @@ export default function OnboardForm({
     e.preventDefault();
     setBusy(true);
     setErr("");
-    const { error } = await supabaseBrowser().rpc("upsert_my_profile", {
-      p_full_name: name.trim(),
-      p_platform: platform,
-      p_has_gpu: gpu === "yes" ? true : gpu === "no" ? false : null,
-    });
-    setBusy(false);
+    const supabase = supabaseBrowser();
+    const has_gpu = gpu === "yes" ? true : gpu === "no" ? false : null;
+    const fullName = name.trim();
+
+    // 1. Try direct upsert. This is what migration 003 enables.
+    let { error } = await supabase.from("profiles").upsert(
+      {
+        user_email: userEmail,
+        full_name: fullName,
+        platform,
+        has_gpu,
+      },
+      { onConflict: "user_email" },
+    );
+
+    // 2. If RLS rejected, fall back to the SECURITY DEFINER RPC (migration 005).
     if (error) {
-      setErr(error.message);
+      console.warn("[onboard] direct upsert failed, trying RPC:", error.message);
+      const r = await supabase.rpc("upsert_my_profile", {
+        p_full_name: fullName,
+        p_platform: platform,
+        p_has_gpu: has_gpu,
+      });
+      error = r.error;
+    }
+
+    setBusy(false);
+
+    if (error) {
+      const msg = `Couldn't save your profile: ${error.message}. Tell the organizers — they likely need to run migrations 003 / 005 in Supabase.`;
+      console.error("[onboard] both paths failed:", error);
+      setErr(msg);
       return;
     }
-    router.replace(next);
-    router.refresh();
+
+    // Force a hard navigation so middleware re-reads the freshly written profile.
+    window.location.href = next;
   }
 
   return (
@@ -108,6 +131,12 @@ export default function OnboardForm({
         </div>
       </div>
 
+      {err && (
+        <div className="rounded-md border border-red-500/50 bg-red-500/10 px-3 py-3 text-sm text-red-200">
+          {err}
+        </div>
+      )}
+
       <button
         type="submit"
         disabled={busy || !name.trim()}
@@ -115,7 +144,6 @@ export default function OnboardForm({
       >
         {busy ? "saving…" : "let's go →"}
       </button>
-      {err && <div className="callout warn text-sm">{err}</div>}
     </form>
   );
 }
