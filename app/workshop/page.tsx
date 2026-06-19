@@ -1,469 +1,250 @@
+import Link from "next/link";
 import { Callout } from "@/components/Callout";
 import { Code } from "@/components/Code";
-import Link from "next/link";
+import MediaSlot from "@/components/MediaSlot";
 
-export const metadata = { title: "The Workshop · Build a Black Hole" };
+export const metadata = { title: "Build · Simathon" };
 
-const TOC = [
-  { id: "before", label: "Before we begin" },
-  { id: "chapter-1", label: "1 · Your first pixel" },
-  { id: "chapter-2", label: "2 · A field of particles" },
-  { id: "chapter-3", label: "3 · Gravity" },
-  { id: "chapter-4", label: "4 · The black hole" },
-  { id: "chapter-5", label: "5 · Make it cinematic" },
-  { id: "copilot", label: "Vibe-coding with Copilot" },
-  { id: "next", label: "What now?" },
-];
+const MASTER_PROMPT = `You are an expert Python + Taichi developer building cinematic physics simulations.
+
+You will be given a physics concept. Your job: produce a single Python file that simulates it, opens a window, and renders it beautifully. The user will run it as 'python sim.py' and expects something visually impressive to appear within seconds.
+
+NON-NEGOTIABLE RULES
+
+1. Stack: Python 3 + the 'taichi' library only (NumPy allowed for setup arrays).
+2. Always start the file with:
+
+   import taichi as ti
+   try:
+       ti.init(arch=ti.gpu)
+   except Exception:
+       ti.init(arch=ti.cpu)
+
+3. Use Taichi fields (ti.Vector.field, ti.field) for all per-particle state. Never store particle state in Python lists.
+4. All physics updates happen inside @ti.kernel functions so they run on GPU.
+5. Render with ti.ui.Window at 1280x800 minimum. Use canvas.circles or canvas.lines.
+6. Use semi-implicit Euler integration: update velocity from forces first, THEN position from velocity. This is stable.
+7. Avoid division by zero. Every distance computation must add a small epsilon (e.g. + 1e-3) before the sqrt or divide.
+8. The simulation must keep running indefinitely. If particles fall off or get absorbed, respawn them at a sensible location so the visual stays alive.
+
+PHYSICS ACCURACY
+
+- Use real formulas. F = G*m1*m2/r^2 for gravity. F = q*v×B for magnetic. Hooke's law for springs. Etc.
+- Pick units that look right on screen (e.g. scale G so orbits actually orbit instead of flying off). Hardcode them as constants at the top of the file — a physicist should be able to recognize what each constant means and tune it.
+- Comment every physics constant with what it represents in SI-equivalent terms.
+
+CINEMATIC QUALITY
+
+- At least 2000 particles. More if it still hits 30+ fps.
+- Particles must be small and dense: radius around 0.002–0.004 in normalized canvas coordinates.
+- Use a per_vertex_color field, never flat color. Color particles by a physically meaningful scalar:
+  * speed → blue (slow) to white (fast) to orange (very fast)
+  * energy → deep red (low) to bright yellow (high)
+  * distance → choose what looks right
+- Background must be near-black (e.g. (0.01, 0.01, 0.03)) so colors pop.
+- If the concept allows: draw a central mass, an event horizon, a magnetic field outline, axis markers, etc. as additional render layers.
+
+CODE STRUCTURE
+
+- One single .py file.
+- Top docstring (3–5 lines) explaining what the simulation depicts.
+- Constants block right after the imports, labeled clearly.
+- @ti.func and @ti.kernel functions in the middle.
+- Main loop at the bottom inside 'if __name__ == "__main__":'.
+- Comments explaining the physics in plain language (the user might be a physics student who doesn't read code well).
+
+ERROR HANDLING
+
+- Wrap window creation in try/except and print a clear message if it fails.
+- If the GPU init fails and we fall back to CPU, print a one-line warning telling the user FPS will be lower.
+
+OUTPUT
+
+Just the code. No explanation around it. The user will paste it into a file called sim.py and run it.
+
+Remembering all of these instructions, build a project with the following idea and concept:
+
+`;
+
+const IDEAS = [
+  // cosmic
+  { tag: "cosmic", title: "Black hole accretion disk", text: "A spinning disk of gas falling into a black hole. Particles glow hotter as they get closer. Some cross the event horizon and disappear forever." },
+  { tag: "cosmic", title: "Galaxy collision", text: "Two spiral galaxies pass through each other. Tidal forces tear long arms of stars into space. Real cosmologists call these 'tidal tails.'" },
+  { tag: "cosmic", title: "Gravitational lensing", text: "Light from background stars bends around a massive foreground object. Show photons curving and creating multiple images of the same source." },
+  { tag: "cosmic", title: "Nebula expansion", text: "A supernova explosion sending a shockwave of glowing gas outward. Color by temperature: hot core, cooling edge." },
+  { tag: "cosmic", title: "Globular cluster", text: "A spherical swarm of ~10,000 stars all gravitating toward their shared center of mass. The cluster slowly contracts and breathes." },
+  { tag: "cosmic", title: "Cosmic web", text: "Dark matter filaments forming the large-scale structure of the universe — long strands of mass with empty voids in between." },
+  { tag: "cosmic", title: "Plasma jet from a quasar", text: "Two narrow beams of ionized particles shooting out perpendicular to an accretion disk. Magnetic field lines twist them into helices." },
+  { tag: "cosmic", title: "Pulsar lighthouse", text: "A spinning neutron star with two narrow radiation beams sweeping like a lighthouse. From a fixed observer, it pulses on and off." },
+
+  // solar system
+  { tag: "solar", title: "Solar system formation", text: "A protoplanetary disk of dust and gas. Particles clump from gravity, planets emerge, gaps form where rings used to be." },
+  { tag: "solar", title: "Saturn's rings with shepherd moons", text: "Thousands of ring particles in orbit around Saturn. Two small moons on either side of the ring keep its edges sharp." },
+  { tag: "solar", title: "Comet tail in solar wind", text: "A comet flies past the sun. Its tail always points away from the sun (not opposite its motion) — that's the real physics." },
+  { tag: "solar", title: "Asteroid belt resonances", text: "Asteroids orbiting between Mars and Jupiter. Some orbital periods become unstable due to Jupiter's gravity — show the gaps form (Kirkwood gaps)." },
+  { tag: "solar", title: "Tidal stretching", text: "A planet very close to a star or a moon close to a gas giant. Show it stretch along the gravity gradient — same effect that powers Io's volcanoes." },
+  { tag: "solar", title: "Lagrange points", text: "Show the 5 Lagrange points of a two-body system. Drop test particles near each — only L4 and L5 are stable, the rest drift away." },
+
+  // exotic
+  { tag: "exotic", title: "Three-body chaos", text: "Three stars orbiting each other with no analytical solution. Tiny initial differences explode into completely different paths. Pure chaos, visually mesmerizing." },
+  { tag: "exotic", title: "Wormhole funnel", text: "An Einstein-Rosen bridge as a 3D throat connecting two regions. Test particles fall in one side and come out the other." },
+  { tag: "exotic", title: "Aurora borealis", text: "Charged particles from solar wind spiraling along Earth's magnetic field lines, glowing green and red as they hit the upper atmosphere." },
+  { tag: "exotic", title: "Magnetic reconnection", text: "Two opposing magnetic field lines snap together, releasing energy. The mechanism behind solar flares. Particles get flung outward at high speed." },
+  { tag: "exotic", title: "Hawking radiation", text: "Particle-antiparticle pairs forming near an event horizon. One falls in, the other escapes. The black hole slowly evaporates." },
+
+  // earth-scale
+  { tag: "earth", title: "Pendulum wave", text: "15 pendulums of slightly different lengths, all swinging together. They desynchronize, then re-synchronize in waves of pattern." },
+  { tag: "earth", title: "Double pendulum chaos", text: "Two pendulums attached end-to-end. Trace the tip's path — it never repeats, and small changes in start create wildly different traces." },
+  { tag: "earth", title: "Lightning fractal", text: "A branching electrical discharge. Each step picks the direction of steepest voltage drop, with some randomness. The result branches like real lightning." },
+  { tag: "earth", title: "Smoke rising", text: "Buoyancy + turbulence. Particles rise from a heat source, swirl, curl into vortices, fade." },
+  { tag: "earth", title: "Sand in zero-g", text: "A blob of granular material released in microgravity. Mutual gravity slowly pulls it into a sphere — same way moons form." },
+] as const;
+
+const tagColor: Record<string, string> = {
+  cosmic: "bg-violet-500/15 text-violet-300 border-violet-500/30",
+  solar: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+  exotic: "bg-pink-500/15 text-pink-300 border-pink-500/30",
+  earth: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+};
 
 export default function WorkshopPage() {
   return (
-    <div className="grid md:grid-cols-[1fr_220px] gap-10">
-      <div className="prose-body">
-        <div className="text-xs uppercase tracking-[0.2em] text-accent2">the workshop</div>
-        <h1 className="text-4xl md:text-5xl font-extrabold mt-1">Build a black hole.</h1>
-        <p className="text-ink/85 text-lg mt-3">
-          Two hours. Five chapters. You start with an empty file. You end with a black hole eating particles on your screen.
-        </p>
-
-        <Callout title="How to use this page">
-          During the live Zoom call, follow along. After the call, this page IS the recording — it's everything you need
-          to redo or finish the build solo. Stuck on a step? Drop a message in <Link href="/chat" className="text-accent">chat</Link>.
-        </Callout>
-
-        {/* Before */}
-        <h2 id="before">Before we begin</h2>
-        <p>
-          You've done the <Link href="/setup" className="text-accent">setup</Link>. Your terminal is open. Your venv is active
-          (the prompt starts with <code>(venv)</code>). VS Code is open in your <code>blackhole</code> folder.
-        </p>
-        <p>
-          Make a new file called <code>sim.py</code>. This is where we'll build the whole thing.
-        </p>
-
-        <Callout kind="warn" title="One mental model before we start">
-          A simulation is just: <em>a bag of numbers + a rule that updates them, 60 times a second</em>. The numbers are
-          positions and velocities of particles. The rule is physics. That's it. There's no magic.
-        </Callout>
-
-        {/* Chapter 1 */}
-        <h2 id="chapter-1">1 · Your first pixel</h2>
-        <p>
-          We're going to put a single dot on the screen and make it move. That's it. If we can do this, everything else is
-          just <em>more of the same</em>.
-        </p>
-
-        <p>Paste this into <code>sim.py</code>:</p>
-        <Code language="python">{`import taichi as ti
-
-# Try GPU first, fall back to CPU if no GPU. Don't worry which one wins.
-try:
-    ti.init(arch=ti.gpu)
-except Exception:
-    ti.init(arch=ti.cpu)
-
-W, H = 800, 600  # window size in pixels
-
-# A "field" is a Taichi array that lives on the GPU.
-# We store the position of one particle as a 2D vector.
-pos = ti.Vector.field(2, dtype=ti.f32, shape=())
-vel = ti.Vector.field(2, dtype=ti.f32, shape=())
-
-pos[None] = ti.Vector([W / 2, H / 2])   # start in the middle
-vel[None] = ti.Vector([2.0, 1.5])       # moving up-right
-
-
-@ti.kernel
-def step():
-    pos[None] += vel[None]
-    # Bounce off the walls
-    if pos[None][0] < 0 or pos[None][0] > W:
-        vel[None][0] *= -1
-    if pos[None][1] < 0 or pos[None][1] > H:
-        vel[None][1] *= -1
-
-
-window = ti.ui.Window("First pixel", (W, H))
-canvas = window.get_canvas()
-
-while window.running:
-    step()
-    canvas.set_background_color((0.02, 0.02, 0.05))
-    # Taichi UI expects 0..1 coords, so we normalize.
-    p_norm = ti.Vector.field(2, dtype=ti.f32, shape=(1,))
-    p_norm[0] = pos[None] / ti.Vector([W, H])
-    canvas.circles(p_norm, radius=0.01, color=(1.0, 0.6, 0.2))
-    window.show()
-`}</Code>
-
-        <p>Save the file. In your terminal:</p>
-        <Code language="bash">python sim.py</Code>
-
-        <Callout kind="check" title="You should see">
-          A black window with an orange dot bouncing around like a DVD logo. <strong>You just wrote a simulation.</strong>
-          Close the window when you're done admiring it.
-        </Callout>
-
-        <Callout kind="warn" title="Stuck?">
-          <ul>
-            <li><strong>"No module named taichi"</strong> — your venv isn't active. Re-run the activate command.</li>
-            <li><strong>Window is white / nothing renders</strong> — try changing <code>ti.gpu</code> to <code>ti.cpu</code>.</li>
-            <li><strong>Black window, no dot</strong> — likely a typo. Copy the snippet again from this page.</li>
-          </ul>
-        </Callout>
-
-        {/* Chapter 2 */}
-        <h2 id="chapter-2">2 · A field of particles</h2>
-        <p>
-          One particle is a toy. One thousand is a universe. We change one number: <code>shape=()</code> becomes
-          <code>shape=N</code>, and Taichi makes it parallel. Replace the whole file with:
-        </p>
-
-        <Code language="python">{`import taichi as ti
-import numpy as np
-
-try:
-    ti.init(arch=ti.gpu)
-except Exception:
-    ti.init(arch=ti.cpu)
-
-W, H = 800, 600
-N = 1000  # number of particles
-
-pos = ti.Vector.field(2, dtype=ti.f32, shape=N)
-vel = ti.Vector.field(2, dtype=ti.f32, shape=N)
-
-
-@ti.kernel
-def init_particles():
-    for i in range(N):
-        pos[i] = ti.Vector([ti.random() * W, ti.random() * H])
-        # random velocity, mostly slow
-        vel[i] = ti.Vector([(ti.random() - 0.5) * 2.0,
-                            (ti.random() - 0.5) * 2.0])
-
-
-@ti.kernel
-def step():
-    for i in range(N):
-        pos[i] += vel[i]
-        if pos[i][0] < 0 or pos[i][0] > W:
-            vel[i][0] *= -1
-        if pos[i][1] < 0 or pos[i][1] > H:
-            vel[i][1] *= -1
-
-
-# A "view" field — Taichi UI wants normalized 0..1 coords.
-pos_view = ti.Vector.field(2, dtype=ti.f32, shape=N)
-
-
-@ti.kernel
-def update_view():
-    for i in range(N):
-        pos_view[i] = pos[i] / ti.Vector([W, H])
-
-
-init_particles()
-window = ti.ui.Window("Field of particles", (W, H))
-canvas = window.get_canvas()
-
-while window.running:
-    step()
-    update_view()
-    canvas.set_background_color((0.02, 0.02, 0.05))
-    canvas.circles(pos_view, radius=0.003, color=(1.0, 0.6, 0.2))
-    window.show()
-`}</Code>
-
-        <p>Run it again.</p>
-
-        <Callout kind="check" title="You should see">
-          A thousand orange dots, all bouncing independently. A field of fireflies. Notice how the GPU handled 1000
-          particles as easily as 1 — that's the whole point of Taichi.
-        </Callout>
-
-        <p>
-          <strong>Try this:</strong> change <code>N = 1000</code> to <code>N = 50000</code>. Re-run. Most laptops will still
-          handle it. Push it until it stutters. <em>That's</em> the line between your CPU and GPU.
-        </p>
-
-        {/* Chapter 3 */}
-        <h2 id="chapter-3">3 · Gravity</h2>
-        <p>
-          Right now the dots bounce around with no purpose. Let's give them a goal — they all fall toward a point in the middle.
-        </p>
-        <p>
-          Newton's law of gravity says: the acceleration pulling something toward a mass at distance <code>r</code> is{" "}
-          <code>a = G · M / r²</code>, pointed toward the mass. We're going to apply that to every particle, every frame.
-        </p>
-
-        <p>
-          Replace your <code>step()</code> function with this:
-        </p>
-
-        <Code language="python">{`G = 0.5          # gravity strength (tune this)
-M = 500.0        # mass at the center
-CENTER = ti.Vector([W / 2, H / 2])
-
-
-@ti.kernel
-def step():
-    for i in range(N):
-        to_center = CENTER - pos[i]
-        r2 = to_center.dot(to_center) + 10.0  # +10 so we don't divide by zero
-        r = ti.sqrt(r2)
-        direction = to_center / r
-        accel = G * M / r2
-        vel[i] += direction * accel
-        pos[i] += vel[i]
-`}</Code>
-
-        <p>
-          Also remove the wall-bounce code — we don't need walls anymore. Particles that fly off will be replaced later.
-        </p>
-
-        <p>Run.</p>
-
-        <Callout kind="check" title="You should see">
-          All the particles get sucked toward the center. Some loop around it like comets. Some go straight in.
-          A few might escape entirely. <strong>That's real Newtonian gravity</strong> — the same math that puts satellites
-          in orbit. You wrote it in 8 lines.
-        </Callout>
-
-        <Callout kind="warn" title="Looks too violent?">
-          Lower <code>G</code> to <code>0.1</code>. Want orbits to look more graceful? Set initial velocities perpendicular
-          to the center (we'll do this in chapter 4).
-        </Callout>
-
-        {/* Chapter 4 */}
-        <h2 id="chapter-4">4 · The black hole</h2>
-        <p>
-          A black hole is a mass with one extra rule: <em>once you get too close, you don't come back</em>. We're going to:
-        </p>
-        <ul>
-          <li>Spawn particles in a ring, with the right velocity for an orbit (so we get a beautiful spiral, not a stampede).</li>
-          <li>Delete particles that cross the event horizon.</li>
-          <li>Respawn them at the edge so the show never ends.</li>
-        </ul>
-
-        <p>Replace the whole file with this. Read the comments as you paste.</p>
-
-        <Code language="python">{`import taichi as ti
-import math
-
-try:
-    ti.init(arch=ti.gpu)
-except Exception:
-    ti.init(arch=ti.cpu)
-
-W, H = 1000, 800
-N = 4000
-
-G = 1.0
-M = 800.0
-EVENT_HORIZON = 12.0     # radius (in pixels) of the "no return" zone
-SPAWN_R_MIN = 180.0
-SPAWN_R_MAX = 330.0
-
-CENTER = ti.Vector([W / 2, H / 2])
-
-pos = ti.Vector.field(2, dtype=ti.f32, shape=N)
-vel = ti.Vector.field(2, dtype=ti.f32, shape=N)
-color = ti.Vector.field(3, dtype=ti.f32, shape=N)
-alive = ti.field(dtype=ti.i32, shape=N)
-
-
-@ti.func
-def seed(i):
-    angle = ti.random() * 2.0 * math.pi
-    r = SPAWN_R_MIN + ti.random() * (SPAWN_R_MAX - SPAWN_R_MIN)
-    pos[i] = CENTER + ti.Vector([ti.cos(angle), ti.sin(angle)]) * r
-
-    # Tangent direction = perpendicular to radial direction.
-    # This gives us a circular orbit instead of a head-on fall.
-    tangent = ti.Vector([-ti.sin(angle), ti.cos(angle)])
-    orbital_speed = ti.sqrt(G * M / r) * 0.95
-    vel[i] = tangent * orbital_speed
-
-    # Color: blue-white outer ring, hot orange inner.
-    t = (r - SPAWN_R_MIN) / (SPAWN_R_MAX - SPAWN_R_MIN)
-    color[i] = ti.Vector([
-        1.0 - t * 0.4,
-        0.6 + t * 0.3,
-        0.3 + t * 0.7,
-    ])
-    alive[i] = 1
-
-
-@ti.kernel
-def init_particles():
-    for i in range(N):
-        seed(i)
-
-
-@ti.kernel
-def step():
-    for i in range(N):
-        if alive[i] == 1:
-            to_center = CENTER - pos[i]
-            r2 = to_center.dot(to_center)
-            r = ti.sqrt(r2 + 1.0)
-            direction = to_center / r
-            accel = G * M / (r2 + 1.0)
-            vel[i] += direction * accel
-            pos[i] += vel[i]
-
-            # Crossed the event horizon? Respawn.
-            if r < EVENT_HORIZON:
-                seed(i)
-
-
-# Normalized positions for rendering.
-pos_view = ti.Vector.field(2, dtype=ti.f32, shape=N)
-
-
-@ti.kernel
-def update_view():
-    for i in range(N):
-        pos_view[i] = pos[i] / ti.Vector([W, H])
-
-
-init_particles()
-window = ti.ui.Window("Black Hole", (W, H))
-canvas = window.get_canvas()
-
-while window.running:
-    step()
-    update_view()
-    canvas.set_background_color((0.0, 0.0, 0.02))
-    canvas.circles(pos_view, radius=0.0025, per_vertex_color=color)
-    window.show()
-`}</Code>
-
-        <p>Run.</p>
-
-        <Callout kind="check" title="You should see">
-          A glowing disk of orbiting particles around a black void in the center. Particles spiral inward and disappear.
-          New ones keep appearing at the outer edge. <strong>Congratulations. You built a black hole accretion disk.</strong>
-        </Callout>
-
-        {/* Chapter 5 */}
-        <h2 id="chapter-5">5 · Make it cinematic</h2>
-        <p>
-          A working sim is not the same as a beautiful one. Three changes turn this from "physics homework" into "post this on Instagram":
-        </p>
-
-        <h3>5a. The black void</h3>
-        <p>Right now there's nothing visibly marking the black hole itself. Let's draw it:</p>
-        <Code language="python">{`# Add somewhere before the main loop:
-hole_pos = ti.Vector.field(2, dtype=ti.f32, shape=(1,))
-hole_pos[0] = CENTER / ti.Vector([W, H])
-
-# Inside the loop, BEFORE drawing the particles:
-canvas.circles(hole_pos, radius=EVENT_HORIZON / W, color=(0.0, 0.0, 0.0))
-`}</Code>
-
-        <h3>5b. The photon ring</h3>
-        <p>
-          Around the event horizon, light bends so much that it can <em>orbit the black hole</em>. We can't simulate
-          full general relativity in 2 hours, but we can fake the visual — a glowing orange ring just outside the horizon:
-        </p>
-        <Code language="python">{`# Make a ring of points
-import numpy as np
-RING_N = 200
-PHOTON_R = EVENT_HORIZON * 1.6
-ring = ti.Vector.field(2, dtype=ti.f32, shape=RING_N)
-ring_np = np.zeros((RING_N, 2), dtype=np.float32)
-for k in range(RING_N):
-    a = 2 * np.pi * k / RING_N
-    ring_np[k] = [CENTER[0] + np.cos(a) * PHOTON_R, CENTER[1] + np.sin(a) * PHOTON_R]
-ring_np /= np.array([W, H])
-ring.from_numpy(ring_np)
-
-# Inside the loop, between the black void and the particles:
-canvas.circles(ring, radius=0.002, color=(1.0, 0.55, 0.15))
-`}</Code>
-
-        <h3>5c. More particles, smaller</h3>
-        <p>Push <code>N</code> up to <code>20000</code> and drop the radius to <code>0.0015</code>. Density is everything.</p>
-
-        <Callout kind="check" title="You should see">
-          A genuinely beautiful black hole: dense, glowing, alive. Take a screenshot. Post it somewhere. People will not
-          believe you wrote it today.
-        </Callout>
-
-        {/* Copilot */}
-        <h2 id="copilot">Vibe-coding with Copilot (use this all week)</h2>
-        <p>
-          You don't need to remember Python syntax for the hackathon. You just need to know <em>how to talk to Copilot</em>.
-          Open Copilot Chat in VS Code (right sidebar). Here are prompts that actually work:
-        </p>
-
-        <div className="space-y-3 text-sm">
-          <div className="rounded-lg border border-white/10 p-3">
-            <div className="text-muted">Prompt</div>
-            <div className="font-mono text-ink">
-              "Add a second black hole at (300, 400) with half the mass. Both should pull on all particles."
+    <div className="prose-body max-w-3xl mx-auto">
+      <div className="text-xs uppercase tracking-[0.2em] text-accent2">02 · the workshop</div>
+      <h1 className="text-3xl font-bold mt-1">Build your sim</h1>
+      <p className="text-ink/80 mt-2 text-[15px]">
+        You don't write code. You give the AI a physics concept and a set of instructions, and it builds the simulation
+        for you. Your job is to <em>pick the idea</em> and <em>guide it</em>. That's the whole workshop.
+      </p>
+
+      {/* How it works */}
+      <h2>How it works (3 steps)</h2>
+      <ol>
+        <li>
+          Open Cursor (the app you installed in <Link href="/setup" className="text-accent">setup</Link>) and open
+          your project folder.
+        </li>
+        <li>
+          Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">Ctrl</kbd>
+          {" + "}<kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">L</kbd> to open
+          the AI chat (Mac: <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">⌘</kbd>
+          {" + "}<kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">L</kbd>).
+        </li>
+        <li>
+          Paste the master prompt below, then your chosen idea right after the last line. Hit Enter. Wait. Click the
+          "Run" button when Cursor offers it.
+        </li>
+      </ol>
+
+      <MediaSlot kind="video" caption="screen recording: pasting prompt + idea, hitting run, watching the sim open" />
+
+      {/* The master prompt */}
+      <h2>The master prompt</h2>
+      <p>
+        Copy this. Paste it into Cursor chat. Then at the bottom — right after "build a project with the following
+        idea and concept:" — paste your chosen idea (see the gallery below).
+      </p>
+
+      <Code language="prompt">{MASTER_PROMPT}</Code>
+
+      <Callout kind="warn" title="Don't paraphrase it">
+        The rules in this prompt exist because they prevent specific bugs. If the AI's output doesn't run, copy the
+        error message back into chat and say "fix this." Don't start over from a different prompt.
+      </Callout>
+
+      {/* The ideas */}
+      <h2 id="ideas">Idea gallery — pick one (or write your own)</h2>
+      <p>
+        Each card is a starting point. Copy the title + the sentence below it into the prompt. Or remix two —
+        a galaxy collision <em>inside</em> a wormhole, lighting from gravity instead of voltage, whatever you want.
+        Going crazy is encouraged.
+      </p>
+
+      <div className="grid sm:grid-cols-2 gap-3 not-prose my-4">
+        {IDEAS.map((idea) => (
+          <div
+            key={idea.title}
+            className="rounded-xl border border-white/10 bg-panel/50 p-4 hover:border-accent/40 transition"
+          >
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="text-sm font-semibold text-ink">{idea.title}</div>
+              <span
+                className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${tagColor[idea.tag]}`}
+              >
+                {idea.tag}
+              </span>
             </div>
+            <div className="text-xs text-ink/75 leading-relaxed">{idea.text}</div>
           </div>
-          <div className="rounded-lg border border-white/10 p-3">
-            <div className="text-muted">Prompt</div>
-            <div className="font-mono text-ink">
-              "When a particle gets close to the event horizon, make it stretch into a trail before disappearing
-              (spaghettification)."
-            </div>
-          </div>
-          <div className="rounded-lg border border-white/10 p-3">
-            <div className="text-muted">Prompt</div>
-            <div className="font-mono text-ink">
-              "Color particles by their speed using a hot colormap — slow is deep red, fast is white."
-            </div>
-          </div>
-          <div className="rounded-lg border border-white/10 p-3">
-            <div className="text-muted">Prompt</div>
-            <div className="font-mono text-ink">
-              "Add trails: when I render each particle, draw the last 10 positions fading out."
-            </div>
-          </div>
-        </div>
-
-        <Callout kind="warn" title="Copilot will sometimes lie">
-          It can suggest code that looks right but uses Taichi APIs that don't exist. If you get an error, paste the error
-          back into Copilot Chat: "I got this error: ..." It almost always fixes it on the second try.
-        </Callout>
-
-        {/* Next */}
-        <h2 id="next">What now?</h2>
-        <ul>
-          <li>You have a working black hole. <strong>This is your starting point for the hackathon.</strong></li>
-          <li>Save your file. Make a GitHub account (we'll need it for submission).</li>
-          <li>Read the <Link href="/hackathon" className="text-accent">hackathon rules</Link>.</li>
-          <li>For inspiration, the <Link href="/gallery" className="text-accent">gallery</Link> opens once submissions start.</li>
-          <li>Stuck? <Link href="/chat" className="text-accent">Chat is open all week.</Link></li>
-        </ul>
-
-        <div className="mt-10 flex gap-3">
-          <Link href="/hackathon" className="px-5 py-2.5 rounded-md bg-accent text-black font-semibold">
-            See the hackathon rules →
-          </Link>
-          <Link href="/chat" className="px-5 py-2.5 rounded-md bg-white/10 hover:bg-white/15 font-semibold">
-            Ask a question
-          </Link>
-        </div>
+        ))}
       </div>
 
-      {/* TOC */}
-      <aside className="hidden md:block">
-        <div className="sticky top-24 text-sm">
-          <div className="text-xs uppercase tracking-[0.2em] text-muted mb-2">on this page</div>
-          <ul className="space-y-1.5">
-            {TOC.map((t) => (
-              <li key={t.id}>
-                <a href={`#${t.id}`} className="text-ink/70 hover:text-accent">{t.label}</a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
+      {/* Iterate */}
+      <h2>After the first version runs</h2>
+      <p>
+        You'll get a window with your sim. It probably won't look perfect on the first try. That's fine. Open Cursor
+        chat again and tell it what you want to change. Examples:
+      </p>
+      <ul>
+        <li>"make the particles brighter and trail-like"</li>
+        <li>"add a second black hole at the top-right with half the mass"</li>
+        <li>"color particles by their speed instead of distance"</li>
+        <li>"add 5x more particles"</li>
+        <li>"the orbits look unstable, fix the integrator step size"</li>
+        <li>"make the background dark navy with subtle stars"</li>
+      </ul>
+
+      <p>
+        Each round, Cursor edits the file. You hit Run again. Repeat until it looks like something you'd post on
+        Instagram. That's the whole iteration loop.
+      </p>
+
+      <Callout kind="check" title="A good sim has">
+        Real physics under the hood, dense smooth motion, color that means something, and a moment where you go
+        "huh, that's actually beautiful." If you've got that — you're done.
+      </Callout>
+
+      {/* Common */}
+      <h2>If it breaks</h2>
+      <ul>
+        <li>
+          <strong>Window opens then closes instantly</strong> — paste the error from Cursor's terminal back into
+          chat: "this crashed, fix it."
+        </li>
+        <li>
+          <strong>Black window, nothing rendering</strong> — likely a coord issue. Say "the canvas is black,
+          particles are off-screen."
+        </li>
+        <li>
+          <strong>Runs at 2 fps</strong> — say "this is too slow on my CPU, reduce particle count to 1000 and use
+          smaller radius."
+        </li>
+        <li>
+          <strong>Cursor refuses or runs out of credits</strong> — fall back to{" "}
+          <a href="https://claude.ai" target="_blank" rel="noreferrer">claude.ai</a> or{" "}
+          <a href="https://chatgpt.com" target="_blank" rel="noreferrer">chatgpt.com</a> in your browser. Paste the
+          master prompt + idea there, copy the code into a file in Cursor manually.
+        </li>
+        <li>
+          <strong>Stuck anywhere else</strong> —{" "}
+          <Link href="/chat" className="text-accent">
+            chat
+          </Link>
+          .
+        </li>
+      </ul>
+
+      <div className="mt-10 flex flex-wrap gap-3">
+        <Link
+          href="/hackathon"
+          className="px-4 py-2 rounded-md bg-accent text-black font-semibold text-sm"
+        >
+          read the hackathon rules →
+        </Link>
+        <Link href="/submit" className="px-4 py-2 rounded-md bg-white/10 hover:bg-white/15 text-sm">
+          submit when ready
+        </Link>
+      </div>
     </div>
   );
 }

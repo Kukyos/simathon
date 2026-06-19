@@ -20,7 +20,7 @@ export default async function ChatPage() {
       <div className="text-xs uppercase tracking-[0.2em] text-accent2">live Q&A</div>
       <h1 className="text-3xl font-extrabold mt-1 mb-1">Chat</h1>
       <p className="text-sm text-muted mb-5">
-        Stuck on setup, on the workshop, or building your sim? Ask here. Armaan + everyone else can answer.
+        Stuck on setup, on the workshop, or building your sim? Ask here. <a href="https://www.linkedin.com/in/armaansucks/" target="_blank" rel="noreferrer" className="text-ink underline underline-offset-2 hover:text-accent">Armaan</a> + everyone else can answer.
         No question is too small.
       </p>
       <ChatRoom userEmail={user.email!.toLowerCase()} initialMessages={(initial ?? []).reverse()} />

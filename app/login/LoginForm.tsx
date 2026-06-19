@@ -9,7 +9,7 @@ export default function LoginForm() {
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [error, setError] = useState("");
   const params = useSearchParams();
-  const next = params.get("next") || "/workshop";
+  const next = params.get("next") || "/setup";
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -32,7 +32,7 @@ export default function LoginForm() {
     if (!ok) {
       setState("error");
       setError(
-        "We don't see your email on the registered list. Use the same address you registered with — or message Yuvika if you think this is wrong.",
+        "We don't see your email on the registered list. Use the same address you registered with — or reach out to the organizers if you think this is wrong.",
       );
       return;
     }
@@ -94,7 +94,7 @@ export default function LoginForm() {
       )}
 
       <div className="mt-6 text-xs text-muted">
-        Trouble logging in? Contact <span className="text-ink">Yuvika</span> or reply to your registration email.
+        Trouble logging in? Reply to your registration email.
       </div>
     </div>
   );
