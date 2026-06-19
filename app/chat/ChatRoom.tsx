@@ -16,9 +16,11 @@ const RATE_LIMIT_MS = 5000;
 
 export default function ChatRoom({
   userEmail,
+  isAdmin,
   initialMessages,
 }: {
   userEmail: string;
+  isAdmin: boolean;
   initialMessages: Message[];
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -84,10 +86,12 @@ export default function ChatRoom({
     const content = input.trim();
     if (!content) return;
 
-    const since = Date.now() - lastSentRef.current;
-    if (since < RATE_LIMIT_MS) {
-      setErr(`hang on, ${Math.ceil((RATE_LIMIT_MS - since) / 1000)}s left`);
-      return;
+    if (!isAdmin) {
+      const since = Date.now() - lastSentRef.current;
+      if (since < RATE_LIMIT_MS) {
+        setErr(`hang on, ${Math.ceil((RATE_LIMIT_MS - since) / 1000)}s left`);
+        return;
+      }
     }
 
     setSending(true);
@@ -124,8 +128,10 @@ export default function ChatRoom({
       }
       return;
     }
-    lastSentRef.current = Date.now();
-    setCooldown(RATE_LIMIT_MS);
+    if (!isAdmin) {
+      lastSentRef.current = Date.now();
+      setCooldown(RATE_LIMIT_MS);
+    }
   }
 
   return (
