@@ -1,17 +1,18 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get("code");
-  const next = searchParams.get("next") || "/setup";
-  const response = NextResponse.redirect(`${origin}${next}`);
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  const tokenHash = url.searchParams.get("token_hash");
+  const type = url.searchParams.get("type") as EmailOtpType | null;
+  const nextCookie = request.cookies.get("simathon_next")?.value;
+  const next = url.searchParams.get("next") || (nextCookie ? decodeURIComponent(nextCookie) : "/setup");
 
-  if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=missing_code`);
-  }
+  const response = NextResponse.redirect(`${url.origin}${next}`);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,10 +29,23 @@ export async function GET(request: NextRequest) {
     },
   );
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) {
+  // Supabase emails arrive in two flavors. Handle both so we don't need users
+  // to edit their email template in the dashboard.
+  let errMsg: string | null = null;
+  if (code) {
+    const r = await supabase.auth.exchangeCodeForSession(code);
+    if (r.error) errMsg = r.error.message;
+  } else if (tokenHash && type) {
+    const r = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+    if (r.error) errMsg = r.error.message;
+  } else {
+    errMsg = "no_code_or_token";
+  }
+
+  if (errMsg) {
+    console.error("[auth/callback] failed:", errMsg, "url:", url.toString());
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent(error.message)}`,
+      `${url.origin}/login?error=${encodeURIComponent(errMsg)}`,
     );
   }
   return response;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
@@ -10,6 +10,16 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const params = useSearchParams();
   const next = params.get("next") || "/setup";
+  const urlError = params.get("error");
+
+  useEffect(() => {
+    if (urlError) {
+      setState("error");
+      setError(
+        `Sign-in didn't complete: ${urlError}. Try requesting a new link, and click it in the same browser you requested it from.`,
+      );
+    }
+  }, [urlError]);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -40,10 +50,14 @@ export default function LoginForm() {
     const siteUrl =
       process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || window.location.origin;
 
+    // Keep emailRedirectTo as plain path so Supabase's redirect-URL allow-list
+    // matches exactly. Store the "next" path in a short-lived cookie instead.
+    document.cookie = `simathon_next=${encodeURIComponent(next)}; path=/; max-age=600; SameSite=Lax`;
+
     const { error: signErr } = await supabase.auth.signInWithOtp({
       email: cleaned,
       options: {
-        emailRedirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`,
+        emailRedirectTo: `${siteUrl}/auth/callback`,
       },
     });
     if (signErr) {
