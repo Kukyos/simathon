@@ -4,7 +4,8 @@
 -- Rate limit + admin flag still work.
 -- ============================================================
 
-create or replace function public.post_message(p_content text)
+drop function if exists public.post_message(text);
+create function public.post_message(p_content text)
 returns bigint
 language plpgsql
 security definer
