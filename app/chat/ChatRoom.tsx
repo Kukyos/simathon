@@ -193,7 +193,11 @@ export default function ChatRoom({
           {cooldown > 0 ? `${Math.ceil(cooldown / 1000)}s` : "send"}
         </button>
       </form>
-      {err && <div className="px-3 pb-2 text-xs text-red-300">{err}</div>}
+      {err && (
+        <div className="mx-3 mb-3 rounded-md border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+          {err}
+        </div>
+      )}
     </div>
   );
 }
