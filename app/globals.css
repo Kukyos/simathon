@@ -4,17 +4,17 @@
 
 :root { color-scheme: dark; }
 
-html, body {
+html {
   background: #0a0a0f;
   color: #e8e9ee;
   min-height: 100%;
 }
 
+/* body must be transparent so fixed -z-10 DotField is visible */
 body {
-  background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(124, 92, 255, 0.15), transparent 60%),
-    radial-gradient(900px 600px at 0% 110%, rgba(255, 106, 61, 0.10), transparent 60%),
-    #0a0a0f;
+  background: transparent;
+  color: #e8e9ee;
+  min-height: 100%;
 }
 
 /* Code blocks */
