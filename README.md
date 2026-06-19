@@ -29,6 +29,8 @@ for auth, chat, phase tracking, and submissions.
    - `supabase/migrations/002_participants.sql`
    - `supabase/migrations/003_phases_admin_chat.sql`
    - `supabase/migrations/004_storage.sql`
+   - `supabase/migrations/005_profile_rpc_and_admin_add.sql`
+   - `supabase/migrations/006_relax_rls.sql`
 3. Authentication → Providers → Email — on. Confirm-email — off.
 4. Authentication → URL Configuration:
    - Site URL: `https://<vercel-url>`
