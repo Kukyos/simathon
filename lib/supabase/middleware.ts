@@ -1,10 +1,9 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminEmail } from "@/lib/admin";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
-const GATED_PREFIXES = ["/chat", "/submit", "/gallery", "/participants", "/phase", "/admin", "/onboard"];
+const GATED_PREFIXES = ["/chat", "/submit", "/gallery", "/participants", "/phase", "/admin"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -35,27 +34,6 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Force onboarding once. Admins (code-level OR db-level) are exempt.
-  if (
-    user &&
-    path !== "/onboard" &&
-    !path.startsWith("/auth") &&
-    !path.startsWith("/login") &&
-    !isAdminEmail(user.email)
-  ) {
-    // Direct profile check — works regardless of which RPCs have been applied.
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("user_email")
-      .eq("user_email", user.email!.toLowerCase())
-      .maybeSingle();
-    if (!profile) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/onboard";
-      url.searchParams.set("next", path);
-      return NextResponse.redirect(url);
-    }
-  }
-
+  // No forced onboarding. Home page nags them with a banner instead.
   return response;
 }
