@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/admin";
 import OnboardForm from "./OnboardForm";
 
 export const metadata = { title: "Welcome · Simathon" };
@@ -13,9 +14,15 @@ export default async function OnboardPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: needs } = await supabase.rpc("needs_onboarding");
-  // Already onboarded (or admin) — skip the form.
-  if (needs === false) redirect(searchParams.next || "/setup");
+  // Admins skip onboarding entirely.
+  if (isAdminEmail(user.email)) redirect(searchParams.next || "/setup");
+
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("user_email")
+    .eq("user_email", user.email!.toLowerCase())
+    .maybeSingle();
+  if (existing) redirect(searchParams.next || "/setup");
 
   return (
     <div className="max-w-lg mx-auto pt-6">
