@@ -134,13 +134,13 @@ export default function SetupPage() {
       <div className="mt-10 flex flex-wrap gap-3">
         <Link
           href="/workshop"
-          className="px-4 py-2 rounded-md bg-accent text-black font-semibold text-sm"
+          className="px-4 py-2 rounded-md bg-accent text-black font-bold text-sm shadow-[0_0_24px_-4px_rgba(255,106,61,0.7)] hover:bg-accent/90"
         >
           continue to build →
         </Link>
         <Link
           href="/chat"
-          className="px-4 py-2 rounded-md bg-white/10 hover:bg-white/15 text-sm"
+          className="px-4 py-2 rounded-md bg-panel border border-white/15 text-ink font-semibold text-sm hover:border-accent/40 hover:bg-panel/80"
         >
           ask in chat
         </Link>

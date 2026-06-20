@@ -39,6 +39,14 @@ export default function ChatRoom({
       .channel("messages-room")
       .on(
         "postgres_changes",
+        { event: "DELETE", schema: "public", table: "messages" },
+        (payload) => {
+          const oldId = (payload.old as { id?: number }).id;
+          if (oldId != null) setMessages((m) => m.filter((x) => x.id !== oldId));
+        },
+      )
+      .on(
+        "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
         (payload) => {
           const incoming = payload.new as Message;
@@ -130,8 +138,38 @@ export default function ChatRoom({
     }
   }
 
+  async function deleteOne(id: number) {
+    setMessages((m) => m.filter((x) => x.id !== id)); // optimistic
+    const { error } = await supabase.from("messages").delete().eq("id", id);
+    if (error) {
+      console.error("[chat] delete failed:", error);
+      setErr(error.message);
+    }
+  }
+
+  async function clearAll() {
+    if (!confirm("Wipe every message in the chat?")) return;
+    setMessages([]);
+    // ponytail: delete all rows. .gt(id,0) since supabase requires a filter.
+    const { error } = await supabase.from("messages").delete().gt("id", 0);
+    if (error) {
+      console.error("[chat] clear failed:", error);
+      setErr(error.message);
+    }
+  }
+
   return (
     <div className="rounded-xl border border-white/10 bg-panel/40 overflow-hidden flex flex-col h-[70vh]">
+      {isAdmin && messages.length > 0 && (
+        <div className="border-b border-white/10 px-3 py-2 flex justify-end">
+          <button
+            onClick={clearAll}
+            className="text-xs px-2 py-1 rounded border border-red-500/40 text-red-300 hover:bg-red-500/10"
+          >
+            clear chat
+          </button>
+        </div>
+      )}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
           <div className="text-sm text-muted">No messages yet. Be the first to ask something.</div>
@@ -139,7 +177,16 @@ export default function ChatRoom({
         {messages.map((m) => {
           const mine = m.user_email.toLowerCase() === userEmail;
           return (
-            <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+            <div key={m.id} className={`group flex items-start gap-2 ${mine ? "justify-end" : "justify-start"}`}>
+              {isAdmin && mine && (
+                <button
+                  onClick={() => deleteOne(m.id)}
+                  className="opacity-0 group-hover:opacity-100 transition text-xs text-red-300 hover:text-red-200 mt-2"
+                  title="delete"
+                >
+                  ✕
+                </button>
+              )}
               <div
                 className={`max-w-[80%] rounded-lg px-3 py-2 ${
                   mine
@@ -168,6 +215,15 @@ export default function ChatRoom({
                 </div>
                 <div className="text-sm whitespace-pre-wrap break-words">{m.content}</div>
               </div>
+              {isAdmin && !mine && (
+                <button
+                  onClick={() => deleteOne(m.id)}
+                  className="opacity-0 group-hover:opacity-100 transition text-xs text-red-300 hover:text-red-200 mt-2"
+                  title="delete"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           );
         })}
