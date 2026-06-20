@@ -17,6 +17,17 @@ body {
   min-height: 100%;
 }
 
+/* Every accent CTA pops: heavier weight + orange glow. Catches all
+   `bg-accent text-black` buttons without rewriting every call site. */
+.bg-accent.text-black {
+  font-weight: 700;
+  box-shadow: 0 0 24px -4px rgba(255, 106, 61, 0.7);
+}
+.bg-accent.text-black:hover {
+  background-color: #ff7d54;
+  box-shadow: 0 0 28px -2px rgba(255, 106, 61, 0.85);
+}
+
 /* Code blocks */
 pre {
   background: #0c0d14;
