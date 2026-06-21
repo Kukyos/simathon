@@ -59,8 +59,8 @@ export default async function SubmissionPage({ params }: { params: { id: string 
       <p className="text-ink/85 mt-2 text-[15px]">{s.tagline}</p>
       <div className="text-xs text-muted mt-2">by {author}</div>
 
-      {/* Media */}
-      {embed ? (
+      {/* Media: clip first (uploaded mp4 or external embed), then screenshot below */}
+      {embed && (
         <div className="mt-6 rounded-xl overflow-hidden border border-white/10 bg-black aspect-video">
           {embed.kind === "raw" ? (
             <video src={embed.src} controls className="w-full h-full" />
@@ -73,12 +73,13 @@ export default async function SubmissionPage({ params }: { params: { id: string 
             />
           )}
         </div>
-      ) : s.screenshot_url ? (
-        <div className="mt-6 rounded-xl overflow-hidden border border-white/10">
+      )}
+      {s.screenshot_url && (
+        <div className="mt-4 rounded-xl overflow-hidden border border-white/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={s.screenshot_url} alt={s.title} className="w-full" />
         </div>
-      ) : null}
+      )}
 
       {/* Description */}
       <section className="mt-8">
@@ -88,39 +89,23 @@ export default async function SubmissionPage({ params }: { params: { id: string 
         </div>
       </section>
 
-      {/* Links */}
-      <section className="mt-8 flex flex-wrap gap-3">
-        {s.github_url && (
-          <a
-            href={s.github_url}
-            target="_blank"
-            rel="noreferrer"
-            className="px-4 py-2 rounded-md border border-white/10 hover:border-accent/40 text-sm"
-          >
-            view code →
-          </a>
-        )}
-        {s.video_url && (
-          <a
-            href={s.video_url}
-            target="_blank"
-            rel="noreferrer"
-            className="px-4 py-2 rounded-md border border-white/10 hover:border-accent/40 text-sm"
-          >
-            open video →
-          </a>
-        )}
-        {s.screenshot_url && (
-          <a
-            href={s.screenshot_url}
-            target="_blank"
-            rel="noreferrer"
-            className="px-4 py-2 rounded-md border border-white/10 hover:border-accent/40 text-sm"
-          >
-            screenshot →
-          </a>
-        )}
-      </section>
+      {/* Code files */}
+      {Array.isArray(s.files) && s.files.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-sm uppercase tracking-[0.18em] text-muted mb-2">code</h2>
+          <ul className="rounded-lg border border-white/10 bg-panel/40 divide-y divide-white/5 text-sm">
+            {(s.files as Array<{ name: string; path: string; size: number }>).map((f) => (
+              <li key={f.name} className="flex items-center gap-3 px-3 py-2">
+                <span className="font-mono truncate flex-1">{f.name}</span>
+                <span className="text-xs text-muted">{(f.size / 1024).toFixed(1)} KB</span>
+                <a href={f.path} target="_blank" rel="noreferrer" className="text-accent text-xs">
+                  download
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="mt-10 text-xs text-muted">
         Submitted {new Date(s.created_at).toLocaleString()}

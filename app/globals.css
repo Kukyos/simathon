@@ -30,6 +30,17 @@ body {
     inset 0 0 0 1px rgba(0, 0, 0, 0.25),
     0 0 28px -4px rgba(255, 106, 61, 0.75);
 }
+.kbd {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.06);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78em;
+  color: #e8e9ee;
+}
+
 .bg-accent.text-black:hover {
   background-color: #ff6a3d !important;
   box-shadow:

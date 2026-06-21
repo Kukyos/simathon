@@ -73,7 +73,27 @@ export default async function SubmitPage() {
       <p className="text-ink/80 mt-2 text-sm">
         Submitting as <span className="text-ink">{user.email}</span>. Edit anytime until the deadline.
       </p>
-      <SubmitForm initial={existing ?? null} userEmail={myEmail} />
+
+      <div className="mt-6 grid sm:grid-cols-2 gap-3 text-sm">
+        <div className="rounded-lg border border-white/10 bg-panel/40 p-3">
+          <div className="text-[10px] uppercase tracking-wider text-accent2 mb-1">how to screenshot</div>
+          <div className="text-ink/85">
+            <span className="font-semibold">Windows:</span> <kbd className="kbd">Win</kbd> + <kbd className="kbd">Shift</kbd> + <kbd className="kbd">S</kbd>, drag a box.
+            <br />
+            <span className="font-semibold">Mac:</span> <kbd className="kbd">⌘</kbd> + <kbd className="kbd">Shift</kbd> + <kbd className="kbd">4</kbd>, drag a box.
+          </div>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-panel/40 p-3">
+          <div className="text-[10px] uppercase tracking-wider text-accent2 mb-1">how to screen-record</div>
+          <div className="text-ink/85">
+            <span className="font-semibold">Windows:</span> <kbd className="kbd">Win</kbd> + <kbd className="kbd">G</kbd>, hit the round record button.
+            <br />
+            <span className="font-semibold">Mac:</span> <kbd className="kbd">⌘</kbd> + <kbd className="kbd">Shift</kbd> + <kbd className="kbd">5</kbd>, choose "Record Selected Portion".
+          </div>
+        </div>
+      </div>
+
+      <SubmitForm initial={(existing as any) ?? null} userEmail={myEmail} />
     </div>
   );
 }
