@@ -81,8 +81,7 @@ export default function SubmitForm({
     for (let i = 0; i < files.length; i++) {
       const f = files[i];
       // webkitRelativePath gives "myproject/main.py" etc. Fall back to name.
-      // @ts-expect-error: webkitRelativePath exists on File at runtime in browsers
-      const rel: string = (f.webkitRelativePath as string) || f.name;
+      const rel: string = f.webkitRelativePath || f.name;
       setProgress(`uploading ${i + 1}/${files.length}: ${rel}`);
       const path = `${folder}/code/${rel}`;
       const supabase = supabaseBrowser();
