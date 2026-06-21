@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
 import SignOutButton from "./SignOutButton";
 
 const SECTIONS: { label: string; links: { href: string; label: string; n?: string }[] }[] = [
@@ -34,11 +34,7 @@ const SECTIONS: { label: string; links: { href: string; label: string; n?: strin
 export default async function Sidebar() {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
-  let isAdmin = false;
-  if (user) {
-    const { data } = await supabase.rpc("am_i_admin");
-    isAdmin = !!data || isAdminEmail(user.email);
-  }
+  const isAdmin = user ? await checkIsAdmin(supabase, user.email) : false;
 
   return (
     <aside className="hidden md:flex w-[260px] shrink-0 border-r border-white/5 flex-col h-screen sticky top-0 bg-bg/70 backdrop-blur">

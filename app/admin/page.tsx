@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
 import AdminPanel from "./AdminPanel";
 
 export const metadata = { title: "Admin · Simathon" };
@@ -10,8 +10,7 @@ export default async function AdminPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/admin");
 
-  const { data: dbAdmin } = await supabase.rpc("am_i_admin");
-  const isAdmin = dbAdmin || isAdminEmail(user.email);
+  const isAdmin = await checkIsAdmin(supabase, user.email);
   if (!isAdmin) {
     return (
       <div>

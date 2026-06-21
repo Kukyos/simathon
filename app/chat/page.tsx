@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
 import ChatRoom from "./ChatRoom";
 
 export const metadata = { title: "Chat · Workshop Q&A" };
@@ -11,17 +11,16 @@ export default async function ChatPage() {
   if (!user) redirect("/login?next=/chat");
 
   const myEmail = user.email!.toLowerCase();
-  const [{ data: initial }, { data: dbAdmin }, { data: profile }, { data: roster }] = await Promise.all([
+  const [{ data: initial }, isAdmin, { data: profile }, { data: roster }] = await Promise.all([
     supabase
       .from("messages")
       .select("id,user_email,display_name,content,is_admin,created_at")
       .order("created_at", { ascending: false })
       .limit(100),
-    supabase.rpc("am_i_admin"),
+    checkIsAdmin(supabase, user.email),
     supabase.from("profiles").select("full_name").eq("user_email", myEmail).maybeSingle(),
     supabase.from("allowed_emails").select("full_name").eq("email", myEmail).maybeSingle(),
   ]);
-  const isAdmin = dbAdmin === true || isAdminEmail(user.email);
   const displayName =
     profile?.full_name?.trim() ||
     roster?.full_name?.trim() ||
