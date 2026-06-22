@@ -11,7 +11,7 @@ You will be given a physics concept. Your job: produce a single Python file that
 
 NON-NEGOTIABLE RULES
 
-1. Stack: Python 3 + the 'taichi' library only (NumPy allowed for setup arrays).
+1. Stack: Python 3.10, 3.11, or 3.12 + the 'taichi' library only (NumPy allowed for setup arrays). Do not use Python 3.13 — Taichi does not support it yet.
 2. Always start the file with:
 
    import taichi as ti
@@ -117,6 +117,13 @@ export default function WorkshopPage() {
         for you. Your job is to <em>pick the idea</em> and <em>guide it</em>. That's the whole workshop.
       </p>
 
+      <Callout title="Use whatever tools you want">
+        This guide uses Cursor + Taichi because it's the easiest path from zero to a working sim. But if you'd rather
+        use Claude, ChatGPT, VS Code with Copilot, plain Python with pygame, three.js in the browser, Unity, Blender —
+        go ahead. Pick what gets <em>you</em> to a beautiful simulation fastest. The only thing that matters at the end
+        is what you submit.
+      </Callout>
+
       {/* How it works */}
       <h2>How it works (3 steps)</h2>
       <ol>
@@ -131,10 +138,16 @@ export default function WorkshopPage() {
           {" + "}<kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">L</kbd>).
         </li>
         <li>
-          Paste the master prompt below, then your chosen idea right after the last line. Hit Enter. Wait. Click the
-          "Run" button when Cursor offers it.
+          Paste the master prompt below, then your chosen idea right after the last line. Hit Enter. Then just{" "}
+          <strong>keep clicking the green buttons</strong> Cursor shows — Run, Accept, Allow, Keep. Let the AI
+          do its job. Don't try to read every line of code.
         </li>
       </ol>
+
+      <Callout kind="check" title="Let it cook">
+        The whole point of Cursor is that you don't write or read code — you watch the AI write it and click
+        Accept. If it crashes, paste the error back and say "fix this." That's the entire loop.
+      </Callout>
 
       <MediaSlot kind="video" caption="screen recording: pasting prompt + idea, hitting run, watching the sim open" />
 
