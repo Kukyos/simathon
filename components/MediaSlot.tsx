@@ -1,11 +1,12 @@
 type Props = {
-  kind?: "image" | "video" | "gif";
+  kind?: "image" | "video";
   src?: string;
   caption?: string;
   ratio?: string; // e.g. "16/9" or "4/3"
 };
 
-// ponytail: dumb wrapper. Renders the media if src is set, otherwise a labeled placeholder.
+// ponytail: drop a file in /public/guide/, set src="/guide/<file>", done.
+// Videos autoplay-loop muted (browser requirement for autoplay). No controls — guide vibe.
 export default function MediaSlot({ kind = "image", src, caption, ratio = "16/9" }: Props) {
   return (
     <figure className="my-4">
@@ -15,7 +16,14 @@ export default function MediaSlot({ kind = "image", src, caption, ratio = "16/9"
       >
         {src ? (
           kind === "video" ? (
-            <video src={src} controls muted className="w-full h-full object-cover" />
+            <video
+              src={src}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={src} alt={caption ?? ""} className="w-full h-full object-cover" />
@@ -23,7 +31,9 @@ export default function MediaSlot({ kind = "image", src, caption, ratio = "16/9"
         ) : (
           <div className="text-center px-4">
             <div className="text-2xl mb-1 opacity-40">▣</div>
-            <div>{kind} placeholder · {caption ?? "drop a screenshot or clip here"}</div>
+            <div>
+              {kind} placeholder · {caption ?? "drop a screenshot or clip here"}
+            </div>
           </div>
         )}
       </div>
