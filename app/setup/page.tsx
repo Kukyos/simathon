@@ -46,7 +46,7 @@ export default function SetupPage() {
         <li>Wait for it to finish. Close the window.</li>
       </ol>
 
-      <MediaSlot src="/guide/python-install.png" caption="screenshot: python installer with 'Add to PATH' ticked" />
+      <MediaSlot src="/guide/python.png" caption="screenshot: python installer with 'Add to PATH' ticked" />
 
       <Callout kind="warn" title="The PATH checkbox matters (Windows only)">
         If you missed it, just run the installer again and tick it this time. Otherwise Cursor won't be
@@ -72,7 +72,7 @@ export default function SetupPage() {
         <li>Done. You don't need to do anything else on GitHub.</li>
       </ol>
 
-      <MediaSlot src="/guide/github-signup.png" caption="screenshot: github signup form" />
+      <MediaSlot src="/guide/githubsignup.png" caption="screenshot: github signup form" />
 
       <Callout kind="warn" title="Already have GitHub?">
         Skip this step. Just remember your login — Cursor will ask for it in a minute.
@@ -99,7 +99,7 @@ export default function SetupPage() {
         <li>It'll ask about importing VS Code settings — just click "Skip" or "Start Fresh."</li>
       </ol>
 
-      <MediaSlot kind="video" src="/guide/cursor-signin.mp4" caption="screen recording: opening cursor for the first time, signing in with google + github" />
+      <MediaSlot kind="video" src="/guide/cursorset.mp4" caption="screen recording: opening cursor for the first time, signing in with google + github" />
 
       <Callout kind="check" title="You should now have">
         Python installed (no window — it just sits in the background), and Cursor open in front of you with an empty
@@ -113,8 +113,6 @@ export default function SetupPage() {
         <li>In Cursor: top menu → <strong>File → Open Folder</strong> → pick the folder you just made.</li>
         <li>Cursor opens it. The left sidebar will be empty. That's normal.</li>
       </ol>
-
-      <MediaSlot src="/guide/cursor-empty-folder.png" caption="screenshot: empty folder open in cursor" />
 
       {/* Step 5 */}
       <h2>5 · Let Cursor install Taichi for you</h2>
@@ -150,7 +148,7 @@ export default function SetupPage() {
         When in doubt, click the green button. The AI is doing the work — your job is just to approve it.
       </Callout>
 
-      <MediaSlot kind="video" src="/guide/cursor-taichi-install.mp4" caption="screen recording: pasting the install prompt into cursor chat" />
+      <MediaSlot kind="video" src="/guide/cursorprompt.mp4" caption="screen recording: pasting the install prompt into cursor chat" />
 
       <Callout kind="check" title="Checkpoint">
         At the bottom of Cursor's terminal you should see lines that end with <code>ok</code>. If you see that, you

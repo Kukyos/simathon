@@ -149,8 +149,6 @@ export default function WorkshopPage() {
         Accept. If it crashes, paste the error back and say "fix this." That's the entire loop.
       </Callout>
 
-      <MediaSlot kind="video" src="/guide/workshop-run.mp4" caption="screen recording: pasting prompt + idea, hitting run, watching the sim open" />
-
       {/* The master prompt */}
       <h2>The master prompt</h2>
       <p>
