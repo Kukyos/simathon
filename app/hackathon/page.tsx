@@ -147,7 +147,7 @@ export default function HackathonPage() {
         <Link href="/submit" className="px-4 py-2 rounded-md bg-accent text-black font-semibold text-sm">
           go to submission →
         </Link>
-        <Link href="/gallery" className="px-4 py-2 rounded-md bg-white/10 hover:bg-white/15 text-sm">
+        <Link href="/gallery" className="btn-ghost">
           see who's submitted
         </Link>
       </div>

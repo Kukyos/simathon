@@ -38,7 +38,7 @@ export default function SetupPage() {
               <strong>"Add python.exe to PATH"</strong>. Then click Install.
             </li>
             <li>
-              <strong>Mac / terminal-style installer:</strong> just keep pressing <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">Enter</kbd>{" "}
+              <strong>Mac / terminal-style installer:</strong> just keep pressing <kbd className="kbd">Enter</kbd>{" "}
               through every prompt. The defaults are fine. Don't type "no" to anything unless it asks for your password (then type it).
             </li>
           </ul>
@@ -122,13 +122,8 @@ export default function SetupPage() {
       </p>
       <ol>
         <li>
-          Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">Ctrl</kbd>
-          {" + "}
-          <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">L</kbd>{" "}
-          (Mac: <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">⌘</kbd>
-          {" + "}
-          <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">L</kbd>) to open the
-          AI chat.
+          Press <kbd className="kbd">Ctrl</kbd>{" + "}<kbd className="kbd">L</kbd>{" "}
+          (Mac: <kbd className="kbd">⌘</kbd>{" + "}<kbd className="kbd">L</kbd>) to open the AI chat.
         </li>
         <li>
           Paste this exactly:
@@ -182,10 +177,7 @@ export default function SetupPage() {
         >
           continue to build →
         </Link>
-        <Link
-          href="/chat"
-          className="px-4 py-2 rounded-md bg-panel border border-white/15 text-ink font-semibold text-sm hover:border-accent/40 hover:bg-panel/80"
-        >
+        <Link href="/chat" className="btn-ghost">
           ask in chat
         </Link>
       </div>

@@ -132,10 +132,8 @@ export default function WorkshopPage() {
           your project folder.
         </li>
         <li>
-          Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">Ctrl</kbd>
-          {" + "}<kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">L</kbd> to open
-          the AI chat (Mac: <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">⌘</kbd>
-          {" + "}<kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-xs">L</kbd>).
+          Press <kbd className="kbd">Ctrl</kbd>{" + "}<kbd className="kbd">L</kbd> to open the AI chat
+          (Mac: <kbd className="kbd">⌘</kbd>{" + "}<kbd className="kbd">L</kbd>).
         </li>
         <li>
           Paste the master prompt below, then your chosen idea right after the last line. Hit Enter. Then just{" "}
@@ -252,7 +250,7 @@ export default function WorkshopPage() {
         >
           read the hackathon rules →
         </Link>
-        <Link href="/submit" className="px-4 py-2 rounded-md bg-white/10 hover:bg-white/15 text-sm">
+        <Link href="/submit" className="btn-ghost">
           submit when ready
         </Link>
       </div>

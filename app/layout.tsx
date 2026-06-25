@@ -38,8 +38,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1 w-full max-w-5xl mx-auto px-5 md:px-12 py-8 md:py-12">
             {children}
           </main>
-          <footer className="border-t border-white/5">
-            <div className="max-w-5xl mx-auto px-5 md:px-12 py-5 text-xs text-muted flex flex-wrap gap-3 justify-between">
+          <footer>
+            <div className="max-w-5xl mx-auto px-5 md:px-12 py-5 text-xs text-muted flex flex-wrap gap-3 justify-between opacity-70">
               <div>
                 built by{" "}
                 <a
