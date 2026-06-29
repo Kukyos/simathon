@@ -13,6 +13,7 @@ type Row = {
   submission_title: string | null;
   submission_tagline: string | null;
   submission_screenshot: string | null;
+  submission_status: "pending" | "approved" | "rejected" | null;
 };
 
 function timeAgo(iso: string | null) {
@@ -92,13 +93,27 @@ export default async function ParticipantsPage() {
               <div className="text-xs text-muted truncate">{r.email}</div>
             </div>
             <div className="text-xs text-muted hidden sm:block">{timeAgo(r.last_sign_in_at)}</div>
-            {r.submission_id ? (
+            {r.submission_id && r.submission_status === "approved" ? (
               <Link
                 href={`/gallery/${r.submission_id}`}
                 className="ml-2 px-2.5 py-1 rounded-md bg-accent/15 border border-accent/30 text-accent text-xs font-medium hover:bg-accent/25"
               >
                 {r.submission_title}
               </Link>
+            ) : r.submission_id && r.submission_status === "pending" ? (
+              <span
+                className="ml-2 px-2.5 py-1 rounded-md border border-yellow-500/40 text-yellow-300 text-xs"
+                title="awaiting admin review"
+              >
+                pending
+              </span>
+            ) : r.submission_id && r.submission_status === "rejected" ? (
+              <span
+                className="ml-2 px-2.5 py-1 rounded-md border border-red-500/40 text-red-300 text-xs"
+                title="rejected by admin"
+              >
+                rejected
+              </span>
             ) : (
               <span className="ml-2 px-2.5 py-1 rounded-md border border-white/10 text-muted text-xs">
                 not yet

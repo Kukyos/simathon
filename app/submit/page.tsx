@@ -66,6 +66,10 @@ export default async function SubmitPage() {
     );
   }
 
+  const galleryStatus: "pending" | "approved" | "rejected" | null =
+    (existing as any)?.gallery_status ?? null;
+  const galleryNote: string | null = (existing as any)?.gallery_note ?? null;
+
   return (
     <div className="max-w-2xl">
       <div className="text-xs uppercase tracking-[0.2em] text-accent2">submission · unlocked</div>
@@ -73,6 +77,24 @@ export default async function SubmitPage() {
       <p className="text-ink/80 mt-2 text-sm">
         Submitting as <span className="text-ink">{user.email}</span>. Edit anytime until the deadline.
       </p>
+
+      {galleryStatus === "pending" && (
+        <div className="mt-4 rounded-md border border-yellow-500/40 bg-yellow-500/5 px-3 py-2 text-sm text-yellow-200">
+          Submitted. Awaiting admin review — not in the public gallery yet.
+        </div>
+      )}
+      {galleryStatus === "rejected" && (
+        <div className="mt-4 rounded-md border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+          <div className="font-semibold">Your submission was rejected by an admin.</div>
+          {galleryNote && <div className="mt-1 text-red-100/85">Note: {galleryNote}</div>}
+          <div className="mt-1 text-red-100/70">Edit below and resubmit; admin will re-review.</div>
+        </div>
+      )}
+      {galleryStatus === "approved" && (
+        <div className="mt-4 rounded-md border border-green-500/40 bg-green-500/5 px-3 py-2 text-sm text-green-200">
+          Live in the gallery ✓
+        </div>
+      )}
 
       <div className="mt-6 grid sm:grid-cols-3 gap-3 text-sm">
         <div className="rounded-lg border border-white/10 bg-panel/40 p-3">

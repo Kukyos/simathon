@@ -67,6 +67,46 @@ body {
   background: rgba(17, 18, 26, 0.85);
 }
 
+/* Sidebar polish — layered gradient + faint dot grid + slow vertical shimmer.
+   All static CSS, no JS, no perf cost beyond compositing. */
+.sidebar-fancy {
+  background:
+    radial-gradient(140% 60% at 0% 0%, rgba(124, 92, 255, 0.08), transparent 55%),
+    radial-gradient(120% 50% at 100% 100%, rgba(255, 106, 61, 0.06), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0) 30%, rgba(255,255,255,0.02) 100%),
+    rgba(10, 10, 15, 0.72);
+  position: relative;
+  overflow: hidden;
+}
+.sidebar-fancy::before {
+  /* faint dot grid */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px);
+  background-size: 18px 18px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+.sidebar-fancy::after {
+  /* slow vertical shimmer line — 14s loop, low-contrast */
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  top: -30%;
+  height: 30%;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.04), transparent);
+  pointer-events: none;
+  animation: sidebar-shimmer 14s linear infinite;
+}
+@keyframes sidebar-shimmer {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(500%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-fancy::after { animation: none; opacity: 0; }
+}
+
 /* Code blocks */
 pre {
   background: #0c0d14;
