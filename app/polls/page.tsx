@@ -13,9 +13,10 @@ export default async function PollsPage() {
   const myEmail = user.email!.toLowerCase();
   const isAdmin = await checkIsAdmin(supabase, user.email);
 
-  const [{ data: polls }, { data: votes }] = await Promise.all([
+  const [{ data: polls }, { data: votes }, { count: participantCount }] = await Promise.all([
     supabase.from("polls").select("*").order("created_at", { ascending: false }).limit(50),
     supabase.from("poll_votes").select("poll_id,user_email,choice"),
+    supabase.from("allowed_emails").select("*", { count: "exact", head: true }),
   ]);
 
   return (
@@ -29,6 +30,7 @@ export default async function PollsPage() {
       <PollsRoom
         userEmail={myEmail}
         isAdmin={isAdmin}
+        participantCount={participantCount ?? 0}
         initialPolls={polls ?? []}
         initialVotes={votes ?? []}
       />
