@@ -112,11 +112,12 @@ export default async function Home() {
       <section className="mt-10 grid sm:grid-cols-2 gap-3">
         {[
           { href: "/setup", n: "01", t: "Setup", d: "Two installs. About 10 minutes. Do this first." },
-          { href: "/workshop", n: "02", t: "Build", d: "How the workshop works. Pick a concept, paste the prompt, watch it come alive." },
-          { href: "/hackathon", n: "03", t: "Hackathon", d: "Rules, theme, judging, prizes. (Most numbers [[TBD]].)" },
-          { href: "/participants", n: "04", t: "Participants", d: "Who else is here. Who's signed in. Who's submitted. Live." },
-          { href: "/gallery", n: "05", t: "Gallery", d: "All the submissions. Click to view." },
-          { href: "/chat", n: "06", t: "Chat", d: "Ask anything. Live during the workshop, async during the build week." },
+          { href: "/blackhole", n: "02", t: "The demo", d: "What you'll see live — and the physics behind it. Download my black hole sim." },
+          { href: "/workshop", n: "03", t: "Build", d: "How the workshop works. Pick a concept, paste the prompt, watch it come alive." },
+          { href: "/hackathon", n: "04", t: "Hackathon", d: "Rules, theme, judging, prizes. (Most numbers [[TBD]].)" },
+          { href: "/participants", n: "05", t: "Participants", d: "Who else is here. Who's signed in. Who's submitted. Live." },
+          { href: "/gallery", n: "06", t: "Gallery", d: "All the submissions. Click to view." },
+          { href: "/chat", n: "07", t: "Chat", d: "Ask anything. Live during the workshop, async during the build week." },
         ].map((c) => (
           <Link
             key={c.href}

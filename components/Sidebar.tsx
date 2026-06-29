@@ -9,8 +9,9 @@ const SECTIONS: { label: string; links: { href: string; label: string; n?: strin
     links: [
       { href: "/", label: "Home" },
       { href: "/setup", label: "Setup", n: "01" },
-      { href: "/workshop", label: "Build", n: "02" },
-      { href: "/hackathon", label: "Hackathon", n: "03" },
+      { href: "/blackhole", label: "The demo", n: "02" },
+      { href: "/workshop", label: "Build", n: "03" },
+      { href: "/hackathon", label: "Hackathon", n: "04" },
     ],
   },
   {
@@ -25,6 +26,7 @@ const SECTIONS: { label: string; links: { href: string; label: string; n?: strin
     label: "community",
     links: [
       { href: "/chat", label: "Chat" },
+      { href: "/polls", label: "Polls" },
       { href: "/participants", label: "Participants" },
       { href: "/gallery", label: "Gallery" },
     ],

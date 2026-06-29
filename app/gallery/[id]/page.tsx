@@ -21,6 +21,12 @@ function toEmbed(url: string | null): { kind: "youtube" | "loom" | "raw"; src: s
       const id = u.pathname.split("/").pop();
       if (id) return { kind: "loom", src: `https://www.loom.com/embed/${id}` };
     }
+    if (host.endsWith("drive.google.com")) {
+      // Accept /file/d/<id>/view OR ?id=<id>
+      const m = u.pathname.match(/\/file\/d\/([^/]+)/);
+      const id = m?.[1] || u.searchParams.get("id");
+      if (id) return { kind: "youtube", src: `https://drive.google.com/file/d/${id}/preview` };
+    }
     if (/\.(mp4|webm|mov)$/i.test(u.pathname)) {
       return { kind: "raw", src: url };
     }
@@ -89,21 +95,19 @@ export default async function SubmissionPage({ params }: { params: { id: string 
         </div>
       </section>
 
-      {/* Code files */}
-      {Array.isArray(s.files) && s.files.length > 0 && (
+      {/* Code */}
+      {s.github_url && (
         <section className="mt-8">
           <h2 className="text-sm uppercase tracking-[0.18em] text-muted mb-2">code</h2>
-          <ul className="rounded-lg border border-white/10 bg-panel/40 divide-y divide-white/5 text-sm">
-            {(s.files as Array<{ name: string; path: string; size: number }>).map((f) => (
-              <li key={f.name} className="flex items-center gap-3 px-3 py-2">
-                <span className="font-mono truncate flex-1">{f.name}</span>
-                <span className="text-xs text-muted">{(f.size / 1024).toFixed(1)} KB</span>
-                <a href={f.path} target="_blank" rel="noreferrer" className="text-accent text-xs">
-                  download
-                </a>
-              </li>
-            ))}
-          </ul>
+          <a
+            href={s.github_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-panel/40 px-3 py-2 text-sm hover:bg-white/5"
+          >
+            <span className="font-mono truncate">{s.github_url}</span>
+            <span className="text-xs text-accent">open ↗</span>
+          </a>
         </section>
       )}
 

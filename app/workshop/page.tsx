@@ -116,6 +116,9 @@ export default function WorkshopPage() {
         You don't write code. You give the AI a physics concept and a set of instructions, and it builds the simulation
         for you. Your job is to <em>pick the idea</em> and <em>guide it</em>. That's the whole workshop.
       </p>
+      <p className="text-ink/70 mt-2 text-sm">
+        Want to see what's possible first? <Link href="/blackhole" className="text-accent">Watch the live demo and read the physics</Link>.
+      </p>
 
       <Callout title="Use whatever tools you want">
         This guide uses Cursor + Taichi because it's the easiest path from zero to a working sim. But if you'd rather

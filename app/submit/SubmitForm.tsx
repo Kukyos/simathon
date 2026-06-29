@@ -4,16 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
-type FileEntry = { name: string; path: string; size: number };
-
 type Submission = {
   id?: string;
   title: string;
   tagline: string;
   description: string;
-  video_url: string | null;       // public URL of the uploaded clip
+  video_url: string | null;       // YouTube or Google Drive share link
+  github_url: string | null;      // public GitHub repo link
   screenshot_url: string | null;  // public URL of the uploaded screenshot
-  files: FileEntry[];             // list of uploaded code files
   display_name: string | null;
 };
 
@@ -22,10 +20,21 @@ const empty: Submission = {
   tagline: "",
   description: "",
   video_url: "",
+  github_url: "",
   screenshot_url: "",
-  files: [],
   display_name: "",
 };
+
+// ponytail: cheap client-side sanity check. Real validation is the admin clicking the link.
+function looksLikeUrl(s: string) {
+  if (!s) return false;
+  try {
+    const u = new URL(s);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 export default function SubmitForm({
   initial,
@@ -45,59 +54,42 @@ export default function SubmitForm({
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  // ponytail: per-user folder. Reusing the bucket means the old screenshot is overwritten on resubmit.
   const folder = userEmail.replace(/[^a-z0-9._-]/gi, "_");
 
-  async function uploadOne(file: File, subpath: string): Promise<string> {
+  async function uploadScreenshot(file: File) {
+    if (file.size > 5_000_000) {
+      setMsg({ kind: "err", text: "Screenshot must be under 5 MB. Try a JPG export." });
+      return;
+    }
+    setProgress("uploading screenshot…");
     const supabase = supabaseBrowser();
-    const path = `${folder}/${subpath}`;
+    const ext = file.name.split(".").pop() || "png";
+    const path = `${folder}/screenshot.${ext}`;
     const { error } = await supabase.storage
       .from("submissions")
       .upload(path, file, { upsert: true, contentType: file.type || undefined });
-    if (error) throw error;
-    const { data } = supabase.storage.from("submissions").getPublicUrl(path);
-    return data.publicUrl;
-  }
-
-  async function uploadScreenshot(file: File) {
-    setProgress("uploading screenshot…");
-    const ext = file.name.split(".").pop() || "png";
-    const url = await uploadOne(file, `screenshot.${ext}`);
-    setForm((f) => ({ ...f, screenshot_url: url }));
-    setProgress("");
-  }
-
-  async function uploadVideo(file: File) {
-    setProgress("uploading clip…");
-    const ext = file.name.split(".").pop() || "mp4";
-    const url = await uploadOne(file, `clip.${ext}`);
-    setForm((f) => ({ ...f, video_url: url }));
-    setProgress("");
-  }
-
-  async function uploadFolder(fileList: FileList) {
-    const files = Array.from(fileList);
-    const entries: FileEntry[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const f = files[i];
-      // webkitRelativePath gives "myproject/main.py" etc. Fall back to name.
-      const rel: string = f.webkitRelativePath || f.name;
-      setProgress(`uploading ${i + 1}/${files.length}: ${rel}`);
-      const path = `${folder}/code/${rel}`;
-      const supabase = supabaseBrowser();
-      const { error } = await supabase.storage
-        .from("submissions")
-        .upload(path, f, { upsert: true, contentType: f.type || undefined });
-      if (error) throw error;
-      const { data } = supabase.storage.from("submissions").getPublicUrl(path);
-      entries.push({ name: rel, path: data.publicUrl, size: f.size });
+    if (error) {
+      setProgress("");
+      setMsg({ kind: "err", text: error.message });
+      return;
     }
-    setForm((f) => ({ ...f, files: entries }));
+    const { data } = supabase.storage.from("submissions").getPublicUrl(path);
+    setForm((f) => ({ ...f, screenshot_url: data.publicUrl }));
     setProgress("");
   }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!looksLikeUrl(form.video_url || "")) {
+      setMsg({ kind: "err", text: "Video link doesn't look like a URL." });
+      return;
+    }
+    if (!looksLikeUrl(form.github_url || "")) {
+      setMsg({ kind: "err", text: "GitHub link doesn't look like a URL." });
+      return;
+    }
+
     setSaving(true);
     setMsg(null);
 
@@ -107,10 +99,10 @@ export default function SubmitForm({
       title: form.title.trim(),
       tagline: form.tagline.trim(),
       description: form.description.trim(),
-      github_url: null,
-      video_url: form.video_url || null,
+      github_url: (form.github_url || "").trim() || null,
+      video_url: (form.video_url || "").trim() || null,
       screenshot_url: form.screenshot_url || null,
-      files: form.files,
+      files: [],
       updated_at: new Date().toISOString(),
     };
 
@@ -164,42 +156,31 @@ export default function SubmitForm({
       </Field>
 
       <Field
-        label="Clip *"
-        hint="30–60 second screen recording. MP4 / MOV / WEBM."
+        label="Video link *"
+        hint='YouTube Unlisted is recommended (Drive throttles videos with many views). Or Google Drive set to "Anyone with the link". Paste the share URL.'
       >
         <input
-          type="file"
-          accept="video/*"
-          onChange={(e) => e.target.files?.[0] && uploadVideo(e.target.files[0])}
-          className={fileInput}
+          required
+          type="url"
+          value={form.video_url ?? ""}
+          onChange={set("video_url")}
+          className={input}
+          placeholder="https://youtu.be/... or https://drive.google.com/file/d/..."
         />
-        {form.video_url && (
-          <video src={form.video_url} controls className="mt-2 w-full max-w-md rounded-md border border-white/10" />
-        )}
       </Field>
 
       <Field
-        label="Your code folder *"
-        hint="Pick the whole folder. The browser uploads every file inside it — no zipping, no git."
+        label="GitHub repo link *"
+        hint='Push your code folder to a PUBLIC GitHub repo and paste the link. Private repos won&apos;t open.'
       >
         <input
-          type="file"
-          // @ts-expect-error: non-standard but supported in Chrome/Edge/Safari/Firefox
-          webkitdirectory=""
-          directory=""
-          multiple
-          onChange={(e) => e.target.files && e.target.files.length > 0 && uploadFolder(e.target.files)}
-          className={fileInput}
+          required
+          type="url"
+          value={form.github_url ?? ""}
+          onChange={set("github_url")}
+          className={input}
+          placeholder="https://github.com/yourname/your-sim"
         />
-        {form.files.length > 0 && (
-          <ul className="mt-2 text-xs text-ink/80 space-y-0.5 max-h-40 overflow-y-auto rounded-md border border-white/10 bg-panel/30 p-2">
-            {form.files.map((f) => (
-              <li key={f.name} className="font-mono truncate">
-                {f.name} <span className="text-muted">({(f.size / 1024).toFixed(1)} KB)</span>
-              </li>
-            ))}
-          </ul>
-        )}
       </Field>
 
       {progress && (

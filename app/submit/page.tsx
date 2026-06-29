@@ -74,7 +74,7 @@ export default async function SubmitPage() {
         Submitting as <span className="text-ink">{user.email}</span>. Edit anytime until the deadline.
       </p>
 
-      <div className="mt-6 grid sm:grid-cols-2 gap-3 text-sm">
+      <div className="mt-6 grid sm:grid-cols-3 gap-3 text-sm">
         <div className="rounded-lg border border-white/10 bg-panel/40 p-3">
           <div className="text-[10px] uppercase tracking-wider text-accent2 mb-1">how to screenshot</div>
           <div className="text-ink/85">
@@ -89,6 +89,16 @@ export default async function SubmitPage() {
             <span className="font-semibold">Windows:</span> <kbd className="kbd">Win</kbd> + <kbd className="kbd">G</kbd>, hit the round record button.
             <br />
             <span className="font-semibold">Mac:</span> <kbd className="kbd">⌘</kbd> + <kbd className="kbd">Shift</kbd> + <kbd className="kbd">5</kbd>, choose "Record Selected Portion".
+          </div>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-panel/40 p-3">
+          <div className="text-[10px] uppercase tracking-wider text-accent2 mb-1">make your links public</div>
+          <div className="text-ink/85">
+            <span className="font-semibold">YouTube:</span> upload, set to <span className="font-mono">Unlisted</span>, copy share link.
+            <br />
+            <span className="font-semibold">Drive:</span> Share → <span className="font-mono">Anyone with the link</span>.
+            <br />
+            <span className="font-semibold">GitHub:</span> repo must be <span className="font-mono">Public</span>.
           </div>
         </div>
       </div>
