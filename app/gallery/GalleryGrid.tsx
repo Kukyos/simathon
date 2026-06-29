@@ -11,6 +11,7 @@ type Sub = {
   display_name: string | null;
   user_email: string;
   screenshot_url: string | null;
+  gallery_status?: "pending" | "approved" | "rejected";
 };
 
 type Reaction = {
@@ -100,7 +101,18 @@ export default function GalleryGrid({
             key={s.id}
             className="mb-3 break-inside-avoid rounded-xl overflow-hidden border border-white/10 bg-panel/60 hover:border-accent/40 transition"
           >
-            <Link href={`/gallery/${s.id}`} className="block group">
+            <Link href={`/gallery/${s.id}`} className="block group relative">
+              {s.gallery_status && s.gallery_status !== "approved" && (
+                <span
+                  className={`absolute top-2 right-2 z-10 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                    s.gallery_status === "pending"
+                      ? "bg-yellow-500/20 border-yellow-500/40 text-yellow-200"
+                      : "bg-red-500/20 border-red-500/40 text-red-200"
+                  }`}
+                >
+                  {s.gallery_status}
+                </span>
+              )}
               {s.screenshot_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img

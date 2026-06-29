@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
 import GalleryGrid from "./GalleryGrid";
 
 export const metadata = { title: "Gallery · Submitted Sims" };
@@ -10,13 +11,17 @@ export default async function GalleryPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/gallery");
   const myEmail = user.email!.toLowerCase();
+  const isAdmin = await checkIsAdmin(supabase, user.email);
+
+  // Admins see every submission (so they can moderate). Everyone else only sees approved.
+  let q = supabase
+    .from("submissions")
+    .select("id,title,tagline,display_name,user_email,screenshot_url,gallery_status")
+    .order("created_at", { ascending: false });
+  if (!isAdmin) q = q.eq("gallery_status", "approved");
 
   const [{ data: subs }, { data: reactions }] = await Promise.all([
-    supabase
-      .from("submissions")
-      .select("id,title,tagline,display_name,user_email,screenshot_url")
-      .eq("gallery_status", "approved")
-      .order("created_at", { ascending: false }),
+    q,
     supabase.from("submission_reactions").select("submission_id,user_email,reaction"),
   ]);
 
@@ -37,11 +42,18 @@ export default async function GalleryPage() {
           </div>
         </div>
       ) : (
-        <GalleryGrid
-          userEmail={myEmail}
-          subs={list}
-          initialReactions={(reactions ?? []) as any}
-        />
+        <>
+          {isAdmin && (
+            <div className="mt-4 rounded-md border border-violet-400/30 bg-violet-500/5 px-3 py-2 text-xs text-violet-200">
+              Admin view · you see every submission including pending and rejected. Click a card to moderate.
+            </div>
+          )}
+          <GalleryGrid
+            userEmail={myEmail}
+            subs={list}
+            initialReactions={(reactions ?? []) as any}
+          />
+        </>
       )}
     </div>
   );

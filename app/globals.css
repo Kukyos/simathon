@@ -70,12 +70,12 @@ body {
 /* Sidebar polish — layered gradient + faint dot grid + slow vertical shimmer.
    All static CSS, no JS, no perf cost beyond compositing. */
 .sidebar-fancy {
+  /* No `position` here — let Tailwind's `fixed` utility win. */
   background:
     radial-gradient(140% 60% at 0% 0%, rgba(124, 92, 255, 0.08), transparent 55%),
     radial-gradient(120% 50% at 100% 100%, rgba(255, 106, 61, 0.06), transparent 60%),
     linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0) 30%, rgba(255,255,255,0.02) 100%),
     rgba(10, 10, 15, 0.72);
-  position: relative;
   overflow: hidden;
 }
 .sidebar-fancy::before {

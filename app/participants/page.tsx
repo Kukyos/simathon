@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
 import AutoRefresh from "@/components/AutoRefresh";
 
 export const metadata = { title: "Participants · Simathon" };
@@ -32,6 +33,7 @@ export default async function ParticipantsPage() {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/participants");
+  const isAdmin = await checkIsAdmin(supabase, user.email);
 
   const { data, error } = await supabase.rpc("get_participants");
   const rows: Row[] = (data as Row[]) ?? [];
@@ -101,19 +103,39 @@ export default async function ParticipantsPage() {
                 {r.submission_title}
               </Link>
             ) : r.submission_id && r.submission_status === "pending" ? (
-              <span
-                className="ml-2 px-2.5 py-1 rounded-md border border-yellow-500/40 text-yellow-300 text-xs"
-                title="awaiting admin review"
-              >
-                pending
-              </span>
+              isAdmin ? (
+                <Link
+                  href={`/gallery/${r.submission_id}`}
+                  className="ml-2 px-2.5 py-1 rounded-md border border-yellow-500/40 bg-yellow-500/10 text-yellow-300 text-xs hover:bg-yellow-500/20"
+                  title="review pending submission"
+                >
+                  pending →
+                </Link>
+              ) : (
+                <span
+                  className="ml-2 px-2.5 py-1 rounded-md border border-yellow-500/40 text-yellow-300 text-xs"
+                  title="awaiting admin review"
+                >
+                  pending
+                </span>
+              )
             ) : r.submission_id && r.submission_status === "rejected" ? (
-              <span
-                className="ml-2 px-2.5 py-1 rounded-md border border-red-500/40 text-red-300 text-xs"
-                title="rejected by admin"
-              >
-                rejected
-              </span>
+              isAdmin ? (
+                <Link
+                  href={`/gallery/${r.submission_id}`}
+                  className="ml-2 px-2.5 py-1 rounded-md border border-red-500/40 bg-red-500/10 text-red-300 text-xs hover:bg-red-500/20"
+                  title="rejected — review again"
+                >
+                  rejected →
+                </Link>
+              ) : (
+                <span
+                  className="ml-2 px-2.5 py-1 rounded-md border border-red-500/40 text-red-300 text-xs"
+                  title="rejected by admin"
+                >
+                  rejected
+                </span>
+              )
             ) : (
               <span className="ml-2 px-2.5 py-1 rounded-md border border-white/10 text-muted text-xs">
                 not yet

@@ -44,6 +44,8 @@ export default function SubmitForm({
   userEmail: string;
 }) {
   const [form, setForm] = useState<Submission>(initial ?? empty);
+  // Was the participant rejected before this edit? If so, resubmitting flips status back to pending.
+  const wasRejected = (initial as any)?.gallery_status === "rejected";
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState<string>("");
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
@@ -93,7 +95,7 @@ export default function SubmitForm({
     setSaving(true);
     setMsg(null);
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       user_email: userEmail,
       display_name: form.display_name?.trim() || null,
       title: form.title.trim(),
@@ -105,6 +107,12 @@ export default function SubmitForm({
       files: [],
       updated_at: new Date().toISOString(),
     };
+    // If admin rejected this before, saving = "please review again".
+    // Flip back to pending and clear the rejection note.
+    if (wasRejected) {
+      payload.gallery_status = "pending";
+      payload.gallery_note = null;
+    }
 
     const supabase = supabaseBrowser();
     const { error } = await supabase
