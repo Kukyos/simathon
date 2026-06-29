@@ -39,7 +39,7 @@ export default async function Sidebar() {
   const isAdmin = user ? await checkIsAdmin(supabase, user.email) : false;
 
   return (
-    <aside className="sidebar-fancy hidden md:flex w-[260px] shrink-0 self-start border-r border-white/5 flex-col h-screen sticky top-0 backdrop-blur">
+    <aside className="sidebar-fancy hidden md:flex fixed top-0 left-0 w-[260px] h-screen border-r border-white/5 flex-col backdrop-blur z-30">
       <div className="px-5 pt-5 pb-3 flex items-center gap-2">
         <Link href="/" className="text-sm font-semibold tracking-tight text-ink hover:text-accent">
           simathon
