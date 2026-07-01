@@ -5,6 +5,7 @@ import MobileNav from "@/components/MobileNav";
 import LastVisitedTracker from "@/components/LastVisitedTracker";
 import DotField from "@/components/DotField";
 import PhysicsClutter from "@/components/PhysicsClutter";
+import RouteProgress from "@/components/RouteProgress";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-screen flex relative">
+        <RouteProgress />
         {/* Background: subtle dotfield, only over the content column (skip sidebar) */}
         <div className="fixed top-0 right-0 bottom-0 left-0 md:left-[260px] -z-10 pointer-events-none">
           <DotField

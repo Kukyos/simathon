@@ -69,7 +69,12 @@ export default function LoginForm() {
     });
     if (signErr) {
       setState("error");
-      setError(signErr.message);
+      // ponytail: Supabase sometimes returns empty message when SMTP fails.
+      // Fall back to a generic string so the user sees something.
+      setError(
+        signErr.message?.trim() ||
+          "Couldn't send the email. This is usually a temporary email-provider issue — try again in a minute, or ping the organizer.",
+      );
       return;
     }
     try {
