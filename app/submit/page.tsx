@@ -2,6 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { PHASES } from "@/lib/phases";
+import { isWorkshopOpen, workshopStartAtIso } from "@/lib/lock";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
+import LockedScreen from "@/components/LockedScreen";
 import SubmitForm from "./SubmitForm";
 
 export const metadata = { title: "Submit · Hackathon" };
@@ -12,6 +15,13 @@ export default async function SubmitPage() {
   if (!user) redirect("/login?next=/submit");
 
   const myEmail = user.email!.toLowerCase();
+
+  if (!isWorkshopOpen()) {
+    const admin = await checkIsAdmin(supabase, user.email);
+    if (!admin) {
+      return <LockedScreen startsAtIso={workshopStartAtIso()} title="Submission opens when the workshop starts." blurb="Finish your setup and Phase 1 in the meantime. Submission unlocks the moment the meeting begins." />;
+    }
+  }
 
   const { data: phases } = await supabase
     .from("phase_progress")

@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
+import { isWorkshopOpen, workshopStartAtIso } from "@/lib/lock";
+import LockedScreen from "@/components/LockedScreen";
 import PollsRoom from "./PollsRoom";
 
 export const metadata = { title: "Polls · Simathon" };
@@ -12,6 +14,10 @@ export default async function PollsPage() {
 
   const myEmail = user.email!.toLowerCase();
   const isAdmin = await checkIsAdmin(supabase, user.email);
+
+  if (!isWorkshopOpen() && !isAdmin) {
+    return <LockedScreen startsAtIso={workshopStartAtIso()} title="Polls open when the workshop starts." blurb="I'll be asking live questions here during the meeting." />;
+  }
 
   const [{ data: polls }, { data: votes }, { count: participantCount }] = await Promise.all([
     supabase.from("polls").select("*").order("created_at", { ascending: false }).limit(50),

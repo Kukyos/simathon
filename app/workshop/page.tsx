@@ -2,6 +2,10 @@ import Link from "next/link";
 import { Callout } from "@/components/Callout";
 import { Code } from "@/components/Code";
 import MediaSlot from "@/components/MediaSlot";
+import { isWorkshopOpen, workshopStartAtIso } from "@/lib/lock";
+import LockedScreen from "@/components/LockedScreen";
+import { supabaseServer } from "@/lib/supabase/server";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
 
 export const metadata = { title: "Build · Simathon" };
 
@@ -107,7 +111,13 @@ const tagColor: Record<string, string> = {
   earth: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
 };
 
-export default function WorkshopPage() {
+export default async function WorkshopPage() {
+  const supabase = supabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
+  const isAdmin = user ? await checkIsAdmin(supabase, user.email) : false;
+  if (!isWorkshopOpen() && !isAdmin) {
+    return <LockedScreen startsAtIso={workshopStartAtIso()} title="The Build guide unlocks when the workshop starts." />;
+  }
   return (
     <div className="prose-body max-w-3xl mx-auto">
       <div className="text-xs uppercase tracking-[0.2em] text-accent2">02 · the workshop</div>
@@ -121,33 +131,39 @@ export default function WorkshopPage() {
       </p>
 
       <Callout title="Use whatever tools you want">
-        This guide uses Cursor + Taichi because it's the easiest path from zero to a working sim. But if you'd rather
-        use Claude, ChatGPT, VS Code with Copilot, plain Python with pygame, three.js in the browser, Unity, Blender —
-        go ahead. Pick what gets <em>you</em> to a beautiful simulation fastest. The only thing that matters at the end
-        is what you submit.
+        This guide uses Antigravity + Taichi because it's the easiest path from zero to a working sim. But if you'd
+        rather use Claude, ChatGPT, VS Code with Copilot, plain Python with pygame, three.js in the browser, Unity,
+        Blender — go ahead. Pick what gets <em>you</em> to a beautiful simulation fastest. The only thing that matters
+        at the end is what you submit.
       </Callout>
 
       {/* How it works */}
       <h2>How it works (3 steps)</h2>
       <ol>
         <li>
-          Open Cursor (the app you installed in <Link href="/setup" className="text-accent">setup</Link>) and open
-          your project folder.
+          Open Antigravity (the app you installed in <Link href="/setup" className="text-accent">setup</Link>).
+          File → Open Folder → make a new folder anywhere (name it whatever — <code>my-sim</code>,{" "}
+          <code>blackhole</code>). Open it.
         </li>
         <li>
-          Press <kbd className="kbd">Ctrl</kbd>{" + "}<kbd className="kbd">L</kbd> to open the AI chat
-          (Mac: <kbd className="kbd">⌘</kbd>{" + "}<kbd className="kbd">L</kbd>).
+          Open the AI chat panel. Pick the <strong>cheapest model</strong> that gives sensible output — save the
+          expensive ones for when you're stuck.
         </li>
         <li>
           Paste the master prompt below, then your chosen idea right after the last line. Hit Enter. Then just{" "}
-          <strong>keep clicking the green buttons</strong> Cursor shows — Run, Accept, Allow, Keep. Let the AI
-          do its job. Don't try to read every line of code.
+          <strong>keep clicking the green buttons</strong> Antigravity shows — Run, Accept, Allow, Keep. Let the
+          agent do its job. Don't try to read every line of code.
         </li>
       </ol>
 
       <Callout kind="check" title="Let it cook">
-        The whole point of Cursor is that you don't write or read code — you watch the AI write it and click
+        The whole point of Antigravity is that you don't write or read code — you watch the agent write it and click
         Accept. If it crashes, paste the error back and say "fix this." That's the entire loop.
+      </Callout>
+
+      <Callout kind="warn" title="Watch your model limits">
+        AI agents get rate-limited or throttled if you hammer the biggest model. Start on the smallest one. Switch
+        up only when it gets genuinely stuck. Otherwise you'll hit a wall mid-workshop.
       </Callout>
 
       {/* The master prompt */}
@@ -207,8 +223,8 @@ export default function WorkshopPage() {
       </ul>
 
       <p>
-        Each round, Cursor edits the file. You hit Run again. Repeat until it looks like something you'd post on
-        Instagram. That's the whole iteration loop.
+        Each round, Antigravity edits the file. You hit Run again. Repeat until it looks like something you'd post
+        on Instagram. That's the whole iteration loop.
       </p>
 
       <Callout kind="check" title="A good sim has">
@@ -216,12 +232,55 @@ export default function WorkshopPage() {
         "huh, that's actually beautiful." If you've got that — you're done.
       </Callout>
 
+      {/* Push to GitHub */}
+      <h2>Push it to GitHub</h2>
+      <p>
+        Once your sim looks good, upload the folder to GitHub so we (and everyone else) can see the code.
+      </p>
+      <ol>
+        <li>
+          In your browser, go to{" "}
+          <a href="https://github.com/new" target="_blank" rel="noreferrer">
+            github.com/new
+          </a>
+          . Give the repo a name. Pick <strong>Public</strong>. Skip the README + gitignore + license — just click
+          Create repository.
+        </li>
+        <li>
+          GitHub shows you a page with a URL like <code>https://github.com/&lt;you&gt;/&lt;repo&gt;.git</code>.
+          Copy it.
+        </li>
+        <li>
+          Back in Antigravity's chat, paste:{" "}
+          <em>"initialize git in this folder, commit everything, and push it to &lt;paste your repo URL&gt;"</em>.
+          Hit Enter. Approve every button — install prompts, credential prompts, etc.
+        </li>
+        <li>
+          On first push, Git will open a browser window asking you to log in to GitHub. Log in. Approve. Come
+          back to Antigravity — it'll finish the push.
+        </li>
+        <li>Refresh the GitHub page. Your files should be there.</li>
+      </ol>
+
+      <Callout title="If Antigravity fumbles the git commands">
+        Run these yourself in the terminal at the bottom of Antigravity. Replace the URL with yours:
+        <div className="mt-2">
+          <pre><code>{`git init
+git add .
+git commit -m "first sim"
+git branch -M main
+git remote add origin https://github.com/YOU/YOURREPO.git
+git push -u origin main`}</code></pre>
+        </div>
+        First push pops open a browser for GitHub login. Log in, approve, done.
+      </Callout>
+
       {/* Common */}
       <h2>If it breaks</h2>
       <ul>
         <li>
-          <strong>Window opens then closes instantly</strong> — paste the error from Cursor's terminal back into
-          chat: "this crashed, fix it."
+          <strong>Window opens then closes instantly</strong> — paste the error from Antigravity's terminal back
+          into chat: "this crashed, fix it."
         </li>
         <li>
           <strong>Black window, nothing rendering</strong> — likely a coord issue. Say "the canvas is black,
@@ -232,10 +291,11 @@ export default function WorkshopPage() {
           smaller radius."
         </li>
         <li>
-          <strong>Cursor refuses or runs out of credits</strong> — fall back to{" "}
-          <a href="https://claude.ai" target="_blank" rel="noreferrer">claude.ai</a> or{" "}
-          <a href="https://chatgpt.com" target="_blank" rel="noreferrer">chatgpt.com</a> in your browser. Paste the
-          master prompt + idea there, copy the code into a file in Cursor manually.
+          <strong>Antigravity refuses or hits a rate limit</strong> — switch to a different model in the chat picker.
+          Or fall back to{" "}
+          <a href="https://claude.ai" target="_blank" rel="noreferrer">claude.ai</a> /{" "}
+          <a href="https://chatgpt.com" target="_blank" rel="noreferrer">chatgpt.com</a> in your browser, paste the
+          master prompt + idea there, and copy the code into a file in Antigravity manually.
         </li>
         <li>
           <strong>Stuck anywhere else</strong> —{" "}

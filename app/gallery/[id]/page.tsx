@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
+import { isWorkshopOpen, workshopStartAtIso } from "@/lib/lock";
+import LockedScreen from "@/components/LockedScreen";
 import DetailClient from "./DetailClient";
 
 export const metadata = { title: "Submission · Simathon" };
@@ -44,6 +46,10 @@ export default async function SubmissionPage({ params }: { params: { id: string 
 
   const myEmail = user.email!.toLowerCase();
   const isAdmin = await checkIsAdmin(supabase, user.email);
+
+  if (!isWorkshopOpen() && !isAdmin) {
+    return <LockedScreen startsAtIso={workshopStartAtIso()} title="Gallery opens when the workshop starts." blurb="Come back when we start the meeting." />;
+  }
 
   const { data: s } = await supabase
     .from("submissions")

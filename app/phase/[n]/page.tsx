@@ -2,6 +2,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { PHASES, phaseByNumber } from "@/lib/phases";
+import { isWorkshopOpen, workshopStartAtIso } from "@/lib/lock";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
+import LockedScreen from "@/components/LockedScreen";
 import PhaseForm from "./PhaseForm";
 
 export const metadata = { title: "Phase · Simathon" };
@@ -14,6 +17,14 @@ export default async function PhasePage({ params }: { params: { n: string } }) {
   const n = parseInt(params.n, 10);
   const phase = phaseByNumber(n);
   if (!phase) notFound();
+
+  // Phase 1 is always open (it's the pre-workshop setup check). Phase 2 waits.
+  if (n >= 2 && !isWorkshopOpen()) {
+    const admin = await checkIsAdmin(supabase, user.email);
+    if (!admin) {
+      return <LockedScreen startsAtIso={workshopStartAtIso()} title={`Phase ${n} unlocks when the workshop starts.`} blurb="Finish Phase 1 (setup check) in the meantime. Phase 2 opens the moment we start the meeting." />;
+    }
+  }
 
   const myEmail = user.email!.toLowerCase();
   const { data: row } = await supabase

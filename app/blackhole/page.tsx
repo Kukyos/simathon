@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { Callout } from "@/components/Callout";
+import { isWorkshopOpen, workshopStartAtIso } from "@/lib/lock";
+import LockedScreen from "@/components/LockedScreen";
+import { supabaseServer } from "@/lib/supabase/server";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
 
 export const metadata = { title: "Black holes · Simathon" };
 
@@ -7,7 +11,13 @@ export const metadata = { title: "Black holes · Simathon" };
 // Drop the demo zip at: workshop-site/public/sim/simathon-blackhole-demo.zip
 const DEMO_HREF = "/sim/simathon-blackhole-demo.zip";
 
-export default function BlackHolePage() {
+export default async function BlackHolePage() {
+  const supabase = supabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
+  const isAdmin = user ? await checkIsAdmin(supabase, user.email) : false;
+  if (!isWorkshopOpen() && !isAdmin) {
+    return <LockedScreen startsAtIso={workshopStartAtIso()} title="The demo unlocks when the workshop starts." blurb="I'll show my black hole sim live in the meeting. This page (with the physics explainer and download) opens when the workshop begins." />;
+  }
   return (
     <div className="prose-body max-w-3xl mx-auto">
       <div className="text-xs uppercase tracking-[0.2em] text-accent2">the demo</div>

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import ResumePill from "@/components/ResumePill";
 import { PHASES } from "@/lib/phases";
+import { isWorkshopOpen, workshopStartAtIso } from "@/lib/lock";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
 
 export default async function Home() {
   const supabase = supabaseServer();
@@ -10,18 +12,25 @@ export default async function Home() {
   let firstName: string | null = null;
   let phaseStatus: Record<number, string> = {};
   let hasSubmitted = false;
+  let isAdmin = false;
 
   if (user) {
     const myEmail = user.email!.toLowerCase();
-    const [{ data: profile }, { data: phases }, { data: sub }] = await Promise.all([
+    const [{ data: profile }, { data: phases }, { data: sub }, admin] = await Promise.all([
       supabase.from("profiles").select("full_name").eq("user_email", myEmail).maybeSingle(),
       supabase.from("phase_progress").select("phase,status").eq("user_email", myEmail),
       supabase.from("submissions").select("id").eq("user_email", myEmail).maybeSingle(),
+      checkIsAdmin(supabase, user.email),
     ]);
     firstName = profile?.full_name ?? null;
     (phases ?? []).forEach((p) => (phaseStatus[p.phase] = p.status));
     hasSubmitted = !!sub;
+    isAdmin = admin;
   }
+
+  const open = isWorkshopOpen() || isAdmin;
+  const startsAtIso = workshopStartAtIso();
+  const startsAt = startsAtIso ? new Date(startsAtIso) : null;
 
   return (
     <div>
@@ -43,6 +52,16 @@ export default async function Home() {
       <div className="mt-4">
         <ResumePill />
       </div>
+
+      {!open && (
+        <div className="mt-6 rounded-xl border border-yellow-500/30 bg-yellow-500/5 px-4 py-3 text-sm text-yellow-100/90">
+          <div className="font-semibold text-yellow-200">Workshop hasn't started yet.</div>
+          <div className="mt-1">
+            Before we begin: install prerequisites (Setup) and submit Phase 1. Everything else unlocks when
+            the meeting starts{startsAt ? ` — ${startsAt.toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}` : ""}.
+          </div>
+        </div>
+      )}
 
       {/* Logged-out CTA */}
       {!user && (
@@ -111,14 +130,14 @@ export default async function Home() {
       {/* Sections */}
       <section className="mt-10 grid sm:grid-cols-2 gap-3">
         {[
-          { href: "/setup", n: "01", t: "Setup", d: "Two installs. About 10 minutes. Do this first." },
-          { href: "/blackhole", n: "02", t: "The demo", d: "What you'll see live — and the physics behind it. Download my black hole sim." },
-          { href: "/workshop", n: "03", t: "Build", d: "How the workshop works. Pick a concept, paste the prompt, watch it come alive." },
-          { href: "/hackathon", n: "04", t: "Hackathon", d: "Rules, theme, judging, prizes. (Most numbers [[TBD]].)" },
-          { href: "/participants", n: "05", t: "Participants", d: "Who else is here. Who's signed in. Who's submitted. Live." },
-          { href: "/gallery", n: "06", t: "Gallery", d: "All the submissions. Click to view." },
-          { href: "/chat", n: "07", t: "Chat", d: "Ask anything. Live during the workshop, async during the build week." },
-        ].map((c) => (
+          { href: "/setup", n: "01", t: "Setup", d: "Three installs + a GitHub account. About 15 minutes. Do this first.", always: true },
+          { href: "/blackhole", n: "02", t: "The demo", d: "What you'll see live — and the physics behind it. Download my black hole sim.", always: false },
+          { href: "/workshop", n: "03", t: "Build", d: "How the workshop works. Pick a concept, paste the prompt, watch it come alive.", always: false },
+          { href: "/hackathon", n: "04", t: "Hackathon", d: "Rules, theme, judging, prizes.", always: true },
+          { href: "/participants", n: "05", t: "Participants", d: "Who else is here. Who's signed in. Who's submitted. Live.", always: false },
+          { href: "/gallery", n: "06", t: "Gallery", d: "All the submissions. Click to view.", always: false },
+          { href: "/chat", n: "07", t: "Chat", d: "Ask anything. Live during the workshop, async during the build week.", always: false },
+        ].filter((c) => open || c.always).map((c) => (
           <Link
             key={c.href}
             href={c.href}

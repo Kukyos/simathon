@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
+import { isWorkshopOpen, workshopStartAtIso } from "@/lib/lock";
+import LockedScreen from "@/components/LockedScreen";
 import AutoRefresh from "@/components/AutoRefresh";
 
 export const metadata = { title: "Participants · Simathon" };
@@ -34,6 +36,10 @@ export default async function ParticipantsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/participants");
   const isAdmin = await checkIsAdmin(supabase, user.email);
+
+  if (!isWorkshopOpen() && !isAdmin) {
+    return <LockedScreen startsAtIso={workshopStartAtIso()} title="Participants opens when the workshop starts." blurb="You'll see who else is here once we begin." />;
+  }
 
   const { data, error } = await supabase.rpc("get_participants");
   const rows: Row[] = (data as Row[]) ?? [];

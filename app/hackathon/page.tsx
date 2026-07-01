@@ -90,10 +90,11 @@ export default function HackathonPage() {
       {/* Prizes */}
       <h2>Prizes</h2>
       <p>
-        Prize pool: {TBD}. Split: {TBD}. Paid via UPI within {TBD} days of judging.
+        <strong>Medals and certificates</strong> for the top submissions. Everyone who submits gets a
+        participation certificate.
       </p>
 
-      <Callout title="Beyond the prize">
+      <Callout title="Beyond the medal">
         Standout sims will be featured (with your name and credit) in the public{" "}
         <strong>physicssim</strong> project, which teaches physics visually to school students. Your work could end up
         in a classroom.

@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
+import { isWorkshopOpen } from "@/lib/lock";
 import SignOutButton from "./SignOutButton";
 
-const SECTIONS: { label: string; links: { href: string; label: string; n?: string }[] }[] = [
+// `locked` = gated until workshop starts (for non-admins).
+const SECTIONS: { label: string; links: { href: string; label: string; n?: string; locked?: boolean }[] }[] = [
   {
     label: "workshop",
     links: [
       { href: "/", label: "Home" },
       { href: "/setup", label: "Setup", n: "01" },
-      { href: "/blackhole", label: "The demo", n: "02" },
-      { href: "/workshop", label: "Build", n: "03" },
+      { href: "/blackhole", label: "The demo", n: "02", locked: true },
+      { href: "/workshop", label: "Build", n: "03", locked: true },
       { href: "/hackathon", label: "Hackathon", n: "04" },
     ],
   },
@@ -18,17 +20,17 @@ const SECTIONS: { label: string; links: { href: string; label: string; n?: strin
     label: "your progress",
     links: [
       { href: "/phase/1", label: "Phase 1 · Setup check" },
-      { href: "/phase/2", label: "Phase 2 · First sim" },
-      { href: "/submit", label: "Submit" },
+      { href: "/phase/2", label: "Phase 2 · First sim", locked: true },
+      { href: "/submit", label: "Submit", locked: true },
     ],
   },
   {
     label: "community",
     links: [
-      { href: "/chat", label: "Chat" },
-      { href: "/polls", label: "Polls" },
-      { href: "/participants", label: "Participants" },
-      { href: "/gallery", label: "Gallery" },
+      { href: "/chat", label: "Chat", locked: true },
+      { href: "/polls", label: "Polls", locked: true },
+      { href: "/participants", label: "Participants", locked: true },
+      { href: "/gallery", label: "Gallery", locked: true },
     ],
   },
 ];
@@ -37,6 +39,7 @@ export default async function Sidebar() {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   const isAdmin = user ? await checkIsAdmin(supabase, user.email) : false;
+  const showLocks = !isWorkshopOpen() && !isAdmin;
 
   return (
     <aside className="sidebar-fancy hidden md:flex fixed top-0 left-0 w-[260px] h-screen border-r border-white/5 flex-col backdrop-blur z-30">
@@ -54,23 +57,30 @@ export default async function Sidebar() {
               {s.label}
             </div>
             <ul className="space-y-0.5">
-              {s.links.map((l) => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    className="group flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-ink/80 hover:bg-white/5 hover:text-ink hover:translate-x-0.5 transition"
-                  >
-                    {l.n ? (
-                      <span className="text-[10px] font-mono text-muted w-5 group-hover:text-accent">
-                        {l.n}
-                      </span>
-                    ) : (
-                      <span className="w-5" />
-                    )}
-                    <span>{l.label}</span>
-                  </Link>
-                </li>
-              ))}
+              {s.links.map((l) => {
+                const dimmed = showLocks && l.locked;
+                return (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      className={`group flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-white/5 hover:translate-x-0.5 transition ${
+                        dimmed ? "text-ink/35 hover:text-ink/60" : "text-ink/80 hover:text-ink"
+                      }`}
+                      title={dimmed ? "opens when the workshop starts" : undefined}
+                    >
+                      {l.n ? (
+                        <span className={`text-[10px] font-mono w-5 group-hover:text-accent ${dimmed ? "text-ink/30" : "text-muted"}`}>
+                          {l.n}
+                        </span>
+                      ) : (
+                        <span className="w-5" />
+                      )}
+                      <span className="flex-1">{l.label}</span>
+                      {dimmed && <span className="text-[10px] opacity-70">🔒</span>}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         ))}

@@ -10,13 +10,15 @@ export default function SetupPage() {
       <div className="text-xs uppercase tracking-[0.2em] text-accent2">01 · before the workshop</div>
       <h1 className="text-3xl font-bold mt-1">Setup</h1>
       <p className="text-ink/80 mt-2 text-[15px]">
-        You need two apps: <strong>Python</strong> (the language your simulation runs in) and{" "}
-        <strong>Cursor</strong> (an editor with AI built in — this is what makes the workshop work without
-        you knowing how to code). Total time: about 10 minutes.
+        Three installs and one signup. About 15 minutes total. Do this <strong>before</strong> the workshop
+        starts — we'll spend the first 5 minutes checking everyone got here. If you show up mid-workshop
+        without setup done, you'll be behind for the whole thing.
       </p>
 
       <Callout title="What you're installing, in one line">
-        Python runs your simulation. Cursor writes the code for you and runs it. That's the whole stack.
+        <strong>Python</strong> runs your sim. <strong>Git</strong> uploads your code to the internet.
+        <strong> GitHub</strong> is where the code lives. <strong>Antigravity</strong> is the editor
+        with an AI agent that writes the code for you.
       </Callout>
 
       {/* Step 1 */}
@@ -27,37 +29,59 @@ export default function SetupPage() {
           <a href="https://www.python.org/downloads/" target="_blank" rel="noreferrer">
             python.org/downloads
           </a>
-          . The site shows a big yellow button. Click it. <strong>You need Python 3.10, 3.11, or 3.12</strong>{" "}
-          (Taichi doesn't support 3.13 yet — if the yellow button says 3.13, scroll down a little and grab 3.12 instead).
+          . Click the big yellow button. <strong>You need Python 3.10, 3.11, or 3.12</strong>{" "}
+          (Taichi doesn't support 3.13 yet — if the button says 3.13, scroll down and grab 3.12).
         </li>
         <li>
-          Run the installer that downloads.
+          Run the installer.
           <ul>
             <li>
-              <strong>Windows (GUI installer):</strong> on the very first screen, tick the box{" "}
-              <strong>"Add python.exe to PATH"</strong>. Then click Install.
+              <strong>Windows:</strong> tick <strong>"Add python.exe to PATH"</strong> on the first screen. Then Install.
             </li>
             <li>
-              <strong>Mac / terminal-style installer:</strong> just keep pressing <kbd className="kbd">Enter</kbd>{" "}
-              through every prompt. The defaults are fine. Don't type "no" to anything unless it asks for your password (then type it).
+              <strong>Mac:</strong> keep pressing <kbd className="kbd">Enter</kbd> through the prompts. Defaults are fine.
             </li>
           </ul>
         </li>
-        <li>Wait for it to finish. Close the window.</li>
       </ol>
 
       <MediaSlot src="/guide/python.png" caption="screenshot: python installer with 'Add to PATH' ticked" />
 
       <Callout kind="warn" title="The PATH checkbox matters (Windows only)">
-        If you missed it, just run the installer again and tick it this time. Otherwise Cursor won't be
-        able to find Python later.
+        If you missed it, run the installer again and tick it. Otherwise Antigravity's terminal won't find Python.
       </Callout>
 
       {/* Step 2 */}
-      <h2>2 · Make a GitHub account</h2>
+      <h2>2 · Install Git</h2>
       <p>
-        Cursor's sign-up will ask you to connect a GitHub account. It's free and takes 60 seconds. You'll also
-        use this same account if you ever share or publish code later.
+        Git is the tool that uploads your code to GitHub. Antigravity's AI will run it for you, but only if it's
+        already installed on your machine.
+      </p>
+      <ol>
+        <li>
+          <strong>Windows:</strong> go to{" "}
+          <a href="https://git-scm.com/download/win" target="_blank" rel="noreferrer">
+            git-scm.com/download/win
+          </a>
+          . The download starts automatically. Run the installer and click Next through every screen — the defaults
+          are correct (including the credential manager, which does GitHub login for you later).
+        </li>
+        <li>
+          <strong>Mac:</strong> open Terminal (Cmd+Space, type "Terminal", Enter). Paste{" "}
+          <code>xcode-select --install</code> and hit Enter. Click Install on the popup. Wait a minute or two.
+        </li>
+      </ol>
+
+      <Callout kind="check" title="Check Git installed">
+        Open a fresh terminal window and type <code>git --version</code>. You should see a line like{" "}
+        <code>git version 2.xx.x</code>. If it says "command not found", reinstall and let the installer add Git to PATH.
+      </Callout>
+
+      {/* Step 3 */}
+      <h2>3 · Make a GitHub account</h2>
+      <p>
+        GitHub is where your code goes at the end. Free, 60 seconds. Skip if you already have one — just remember
+        the login.
       </p>
       <ol>
         <li>
@@ -65,117 +89,104 @@ export default function SetupPage() {
           <a href="https://github.com/signup" target="_blank" rel="noreferrer">
             github.com/signup
           </a>
-          . Use your real email — you'll need to click a confirmation link.
+          . Use your real email — you'll need the confirmation link.
         </li>
-        <li>Pick a username. Anything works. Pick a password.</li>
-        <li>Type the code GitHub emails you. Skip every "personalize your experience" question by clicking Continue or Skip.</li>
-        <li>Done. You don't need to do anything else on GitHub.</li>
+        <li>Pick a username and password.</li>
+        <li>Enter the code GitHub emails you. Skip every "personalize your experience" screen.</li>
+        <li>
+          Stay logged in on your browser — you'll come back here in Phase 2 to create a repo.
+        </li>
       </ol>
 
       <MediaSlot src="/guide/githubsignup.png" caption="screenshot: github signup form" />
 
-      <Callout kind="warn" title="Already have GitHub?">
-        Skip this step. Just remember your login — Cursor will ask for it in a minute.
-      </Callout>
-
-      {/* Step 3 */}
-      <h2>3 · Install Cursor</h2>
-      <ol>
-        <li>
-          Go to{" "}
-          <a href="https://cursor.com" target="_blank" rel="noreferrer">
-            cursor.com
-          </a>{" "}
-          and click <strong>Download</strong>.
-        </li>
-        <li>Open the file that downloads, drag it to Applications (Mac) or run the installer (Windows).</li>
-        <li>
-          Open Cursor. It'll ask you to sign in — pick <strong>Continue with Google</strong> (use your Gmail).
-        </li>
-        <li>
-          It'll then ask to <strong>connect GitHub</strong>. Click yes, log in with the account you just made.
-          Approve the permissions screen.
-        </li>
-        <li>It'll ask about importing VS Code settings — just click "Skip" or "Start Fresh."</li>
-      </ol>
-
-      <MediaSlot kind="video" src="/guide/cursorset.mp4" caption="screen recording: opening cursor for the first time, signing in with google + github" />
-
-      <Callout kind="check" title="You should now have">
-        Python installed (no window — it just sits in the background), and Cursor open in front of you with an empty
-        editor view.
-      </Callout>
-
       {/* Step 4 */}
-      <h2>4 · Make a folder for your project</h2>
-      <ol>
-        <li>On your desktop, right-click → New Folder. Name it whatever — <code>my-sim</code>, <code>blackhole</code>, anything.</li>
-        <li>In Cursor: top menu → <strong>File → Open Folder</strong> → pick the folder you just made.</li>
-        <li>Cursor opens it. The left sidebar will be empty. That's normal.</li>
-      </ol>
-
-      {/* Step 5 */}
-      <h2>5 · Let Cursor install Taichi for you</h2>
+      <h2>4 · Install Antigravity</h2>
       <p>
-        Taichi is the library that does the heavy lifting — physics on your graphics card. We could install it
-        from the terminal, but you don't need to. Cursor can do it for you.
+        Antigravity is a code editor with an AI agent built in. You talk to it, it writes code and runs it. That's
+        the whole workshop.
       </p>
       <ol>
         <li>
-          Press <kbd className="kbd">Ctrl</kbd>{" + "}<kbd className="kbd">L</kbd>{" "}
-          (Mac: <kbd className="kbd">⌘</kbd>{" + "}<kbd className="kbd">L</kbd>) to open the AI chat.
+          Go to{" "}
+          <a href="https://antigravity.google/" target="_blank" rel="noreferrer">
+            antigravity.google
+          </a>
+          . Click <strong>Download</strong>. Pick the installer that matches your OS.
         </li>
+        <li>Run the installer. On Mac, drag it to Applications.</li>
         <li>
-          Paste this exactly:
+          Open Antigravity. When it asks you to sign in, use <strong>Google</strong> (any Gmail). That's the whole
+          login — no other accounts, no configuration.
+        </li>
+        <li>Skip any "import VS Code settings" or tutorial prompts. Just close them.</li>
+      </ol>
+
+      <Callout kind="warn" title="Model picker — start cheap">
+        Antigravity's agent runs on multiple AI models with different rate limits and costs. Start with the
+        cheapest option that gives sensible answers. If it stops working mid-sim ("rate limited"), switch to a
+        stronger one. Don't burn the most expensive model on your first prompt — save it for when you're stuck.
+      </Callout>
+
+      <Callout kind="check" title="You should now have">
+        Python installed (sits invisibly in the background), Git installed (also invisible), a GitHub account you're
+        logged into in your browser, and Antigravity open in front of you.
+      </Callout>
+
+      {/* Verify */}
+      <h2>5 · Verify (Phase 1 submission)</h2>
+      <ol>
+        <li>In Antigravity, open the terminal at the bottom (View → Terminal, or <kbd className="kbd">Ctrl</kbd>+<kbd className="kbd">`</kbd>).</li>
+        <li>
+          Paste and run:
           <div className="my-2">
-            <pre><code>{`Install taichi and numpy for me using pip. Run the install command in the terminal. Then check the install worked by running: python -c "import taichi as ti; ti.init(); print('ok')"`}</code></pre>
+            <pre><code>python --version &amp;&amp; git --version</code></pre>
           </div>
         </li>
-        <li>Press Enter. Cursor opens a terminal at the bottom and runs the commands for you.</li>
+        <li>You should see two version lines.</li>
         <li>
-          Whenever Cursor pops up a button — <strong>Run</strong>, <strong>Accept</strong>, <strong>Allow</strong>,{" "}
-          <strong>Keep</strong> — just click it. <strong>Let the AI do its job.</strong> Don't try to read every
-          line. Click the buttons, watch what happens.
+          Screenshot the terminal. Upload it on{" "}
+          <Link href="/phase/1" className="text-accent">
+            Phase 1
+          </Link>
+          . Once an admin approves, you're all clear for the workshop.
         </li>
       </ol>
 
-      <Callout kind="check" title="The golden rule with Cursor">
-        When in doubt, click the green button. The AI is doing the work — your job is just to approve it.
-      </Callout>
-
-      <MediaSlot kind="video" src="/guide/cursorprompt.mp4" caption="screen recording: pasting the install prompt into cursor chat" />
-
-      <Callout kind="check" title="Checkpoint">
-        At the bottom of Cursor's terminal you should see lines that end with <code>ok</code>. If you see that, you
-        are done with setup. Close Cursor — you're ready for the workshop.
+      <Callout kind="check" title="About Taichi">
+        You don't install Taichi now. When we start vibecoding during the workshop, Antigravity's agent will run{" "}
+        <code>pip install taichi</code> in your project's terminal on its own. One less thing to worry about.
       </Callout>
 
       {/* Stuck */}
       <h2>If something went wrong</h2>
       <ul>
         <li>
-          <strong>Cursor says it can't find Python</strong> — reinstall Python with the "Add to PATH" box ticked, then
-          restart Cursor.
+          <strong>Antigravity says it can't find Python</strong> — reinstall Python with "Add to PATH" ticked,
+          then restart Antigravity.
         </li>
         <li>
-          <strong>Cursor's terminal shows an error during install</strong> — copy the red text, paste it back into the
-          Cursor chat, and ask "fix this." It usually fixes itself.
+          <strong><code>git</code> command not found</strong> — reinstall Git; on Windows use the default options.
         </li>
         <li>
-          <strong>Nothing is working</strong> — take a screenshot. Drop it in{" "}
+          <strong>Terminal shows a red error</strong> — copy the error, paste it into Antigravity's chat, say
+          "fix this". It usually can.
+        </li>
+        <li>
+          <strong>Nothing works</strong> — take a screenshot, drop it in{" "}
           <Link href="/chat" className="text-accent">
             chat
           </Link>
-          . Someone will respond.
+          .
         </li>
       </ul>
 
       <div className="mt-10 flex flex-wrap gap-3">
         <Link
-          href="/workshop"
+          href="/phase/1"
           className="px-4 py-2 rounded-md bg-accent text-black font-bold text-sm shadow-[0_0_24px_-4px_rgba(255,106,61,0.7)] hover:bg-accent/90"
         >
-          continue to build →
+          submit Phase 1 →
         </Link>
         <Link href="/chat" className="btn-ghost">
           ask in chat

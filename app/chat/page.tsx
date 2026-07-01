@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
+import { isWorkshopOpen, workshopStartAtIso } from "@/lib/lock";
+import LockedScreen from "@/components/LockedScreen";
 import ChatRoom from "./ChatRoom";
 
 export const metadata = { title: "Chat · Workshop Q&A" };
@@ -9,6 +11,11 @@ export default async function ChatPage() {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/chat");
+
+  const preAdmin = await checkIsAdmin(supabase, user.email);
+  if (!isWorkshopOpen() && !preAdmin) {
+    return <LockedScreen startsAtIso={workshopStartAtIso()} title="Chat opens when the workshop starts." blurb="Stuck on setup before the workshop? DM me on LinkedIn — linkedin.com/in/armaansucks." />;
+  }
 
   const myEmail = user.email!.toLowerCase();
   const [{ data: initial }, isAdmin, { data: profile }, { data: roster }] = await Promise.all([

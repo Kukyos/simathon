@@ -5,25 +5,26 @@ export const PHASES = [
     slug: "setup-check",
     title: "Setup verified",
     blurb:
-      "Prove Python, Taichi, and Cursor are installed. We just need to see one screenshot of a working install.",
+      "Prove Python, Git, and Antigravity are installed. One screenshot showing the version output does it.",
     howTo: [
-      "Open Cursor. Open the terminal panel at the bottom (View → Terminal).",
-      'Paste this command and hit Enter: python -c "import taichi as ti; ti.init(); print(\'setup ok\')"',
-      "Screenshot the result. The bottom of the output should say setup ok (along with some Taichi startup messages).",
-      "Upload the screenshot below.",
+      "Open Antigravity. Open the terminal panel at the bottom (View → Terminal, or the shortcut Ctrl+`).",
+      "Paste this and hit Enter: python --version && git --version",
+      "You should see two version lines, e.g. Python 3.12.x and git version 2.xx.x.",
+      "Screenshot the terminal output. Upload it below.",
     ],
   },
   {
     n: 2,
     slug: "first-sim",
-    title: "First sim running",
+    title: "First sim + pushed to GitHub",
     blurb:
-      "Use the master prompt + an idea from the gallery to generate a working sim. Run it. Screenshot the window.",
+      "You got a working sim from Antigravity + master prompt, and you pushed the folder to a public GitHub repo. Paste the repo link.",
     howTo: [
-      "Pick an idea from the Build page gallery.",
-      "Paste the master prompt + your idea into Cursor's AI chat. Let it generate the code.",
-      "Click Run. A simulation window should open.",
-      "Screenshot the window (or short video). Upload below.",
+      "Open Antigravity, open your project folder, and use the master prompt + an idea from the Build page.",
+      "Iterate until a window opens with a running simulation. Screenshot the window.",
+      "Go to github.com → New repository → Public. Copy the HTTPS URL it shows.",
+      "In Antigravity's chat, paste: 'commit this folder and push it to <your-repo-url>'. Approve every button it shows.",
+      "Open the repo on GitHub in your browser to check your files landed. Paste the repo URL below along with the screenshot.",
     ],
   },
 ] as const;

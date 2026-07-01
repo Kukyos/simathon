@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
+import { isWorkshopOpen, workshopStartAtIso } from "@/lib/lock";
+import LockedScreen from "@/components/LockedScreen";
 import GalleryGrid from "./GalleryGrid";
 
 export const metadata = { title: "Gallery · Submitted Sims" };
@@ -12,6 +14,10 @@ export default async function GalleryPage() {
   if (!user) redirect("/login?next=/gallery");
   const myEmail = user.email!.toLowerCase();
   const isAdmin = await checkIsAdmin(supabase, user.email);
+
+  if (!isWorkshopOpen() && !isAdmin) {
+    return <LockedScreen startsAtIso={workshopStartAtIso()} title="Gallery opens when the workshop starts." blurb="Nothing to show yet — submissions arrive once we've built our sims." />;
+  }
 
   // Admins see every submission (so they can moderate). Everyone else only sees approved.
   let q = supabase
