@@ -5,11 +5,26 @@ type Props = {
   ratio?: string;
 };
 
-// ponytail: in prod, render nothing when no src. In dev, show a labeled stub so authors know
-// where to drop a file. Videos autoplay-loop muted (browser requirement for autoplay).
+// ponytail: `src` can be a local path, a YouTube URL, or empty. Empty = show a
+// "coming soon" placeholder (dev + prod both, so authors can see where slots
+// live on the live site). YouTube URLs get iframe-embedded automatically.
+function youtubeEmbed(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtu.be")) return `https://www.youtube.com/embed${u.pathname}`;
+    if (u.hostname.includes("youtube.com")) {
+      const v = u.searchParams.get("v");
+      if (v) return `https://www.youtube.com/embed/${v}`;
+      if (u.pathname.startsWith("/embed/")) return url;
+    }
+  } catch {
+    /* not a URL */
+  }
+  return null;
+}
+
 export default function MediaSlot({ kind = "image", src, caption, ratio = "16/9" }: Props) {
   if (!src) {
-    if (process.env.NODE_ENV === "production") return null;
     return (
       <figure className="my-4">
         <div
@@ -17,8 +32,8 @@ export default function MediaSlot({ kind = "image", src, caption, ratio = "16/9"
           style={{ aspectRatio: ratio }}
         >
           <div className="text-center px-4">
-            <div className="text-2xl mb-1 opacity-40">▣</div>
-            <div>[dev] {kind} placeholder · {caption ?? "drop a file here"}</div>
+            <div className="text-2xl mb-1 opacity-40">{kind === "video" ? "▶" : "▣"}</div>
+            <div>{kind === "video" ? "video walkthrough — coming soon" : caption ?? "image placeholder"}</div>
           </div>
         </div>
         {caption && (
@@ -28,13 +43,23 @@ export default function MediaSlot({ kind = "image", src, caption, ratio = "16/9"
     );
   }
 
+  const yt = kind === "video" ? youtubeEmbed(src) : null;
+
   return (
     <figure className="my-4">
       <div
         className="w-full rounded-lg overflow-hidden border border-white/10 bg-panel/40"
         style={{ aspectRatio: ratio }}
       >
-        {kind === "video" ? (
+        {yt ? (
+          <iframe
+            src={yt}
+            title={caption ?? "video"}
+            className="w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        ) : kind === "video" ? (
           <video
             src={src}
             autoPlay

@@ -77,6 +77,8 @@ export default function SetupPage() {
         <code>git version 2.xx.x</code>. If it says "command not found", reinstall and let the installer add Git to PATH.
       </Callout>
 
+      <MediaSlot kind="video" caption="watch: installing git in under 2 minutes" />
+
       {/* Step 3 */}
       <h2>3 · Make a GitHub account</h2>
       <p>
@@ -122,6 +124,8 @@ export default function SetupPage() {
         <li>Skip any "import VS Code settings" or tutorial prompts. Just close them.</li>
       </ol>
 
+      <MediaSlot kind="video" caption="watch: install antigravity + first sign-in" />
+
       <Callout kind="warn" title="Model picker — start cheap">
         Antigravity's agent runs on multiple AI models with different rate limits and costs. Start with the
         cheapest option that gives sensible answers. If it stops working mid-sim ("rate limited"), switch to a
@@ -152,6 +156,8 @@ export default function SetupPage() {
           . Once an admin approves, you're all clear for the workshop.
         </li>
       </ol>
+
+      <MediaSlot kind="video" caption="watch: verify install + submit Phase 1" />
 
       <Callout kind="check" title="About Taichi">
         You don't install Taichi now. When we start vibecoding during the workshop, Antigravity's agent will run{" "}

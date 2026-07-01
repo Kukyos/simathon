@@ -166,6 +166,8 @@ export default async function WorkshopPage() {
         up only when it gets genuinely stuck. Otherwise you'll hit a wall mid-workshop.
       </Callout>
 
+      <MediaSlot kind="video" caption="watch: full workshop loop — paste prompt, hit run, keep clicking accept" />
+
       {/* The master prompt */}
       <h2>The master prompt</h2>
       <p>
