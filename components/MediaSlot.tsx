@@ -8,19 +8,32 @@ type Props = {
 // ponytail: `src` can be a local path, a YouTube URL, or empty. Empty = show a
 // "coming soon" placeholder (dev + prod both, so authors can see where slots
 // live on the live site). YouTube URLs get iframe-embedded automatically.
+// ponytail: autoplay+mute+loop+scrub, minimal YT chrome. loop=1 needs
+// playlist=<id> to actually loop a single video (YT quirk).
 function youtubeEmbed(url: string): string | null {
+  let id: string | null = null;
   try {
     const u = new URL(url);
-    if (u.hostname.includes("youtu.be")) return `https://www.youtube.com/embed${u.pathname}`;
-    if (u.hostname.includes("youtube.com")) {
-      const v = u.searchParams.get("v");
-      if (v) return `https://www.youtube.com/embed/${v}`;
-      if (u.pathname.startsWith("/embed/")) return url;
+    if (u.hostname.includes("youtu.be")) id = u.pathname.slice(1);
+    else if (u.hostname.includes("youtube.com")) {
+      id = u.searchParams.get("v") ?? (u.pathname.startsWith("/embed/") ? u.pathname.slice(7) : null);
     }
   } catch {
     /* not a URL */
   }
-  return null;
+  if (!id) return null;
+  const params = new URLSearchParams({
+    autoplay: "1",
+    mute: "1",
+    loop: "1",
+    playlist: id,
+    controls: "1",
+    modestbranding: "1",
+    rel: "0",
+    playsinline: "1",
+    iv_load_policy: "3",
+  });
+  return `https://www.youtube-nocookie.com/embed/${id}?${params}`;
 }
 
 export default function MediaSlot({ kind = "image", src, caption, ratio = "16/9" }: Props) {
