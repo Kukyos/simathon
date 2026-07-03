@@ -34,13 +34,25 @@ export default function PhaseForm({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
+  const MAX_BYTES = 10 * 1024 * 1024;
+
   function pickFile(f: File | null) {
+    if (f && f.size > MAX_BYTES) {
+      setErr(`that file is ${(f.size / 1024 / 1024).toFixed(1)} MB — max is 10 MB. Trim the clip or use a screenshot.`);
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+    setErr("");
     setFile(f);
     if (f) setPreview(URL.createObjectURL(f));
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (file && file.size > MAX_BYTES) {
+      setErr("file too big — max 10 MB.");
+      return;
+    }
     setBusy(true);
     setErr("");
     const supabase = supabaseBrowser();
@@ -49,7 +61,9 @@ export default function PhaseForm({
 
     if (file) {
       const ext = file.name.split(".").pop() || "png";
-      const path = `${userEmail}/phase${phase}/${Date.now()}.${ext}`;
+      // ponytail: fixed path (no timestamp) + upsert so re-submits overwrite
+      // in place instead of orphaning old files in storage.
+      const path = `${userEmail}/phase${phase}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("phase_proofs")
         .upload(path, file, { upsert: true, contentType: file.type });
