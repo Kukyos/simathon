@@ -24,19 +24,21 @@ export default async function AdminPage() {
     );
   }
 
-  const [{ data: participants }, { data: pending }] = await Promise.all([
+  const [{ data: participants }, { data: pending }, { data: signupsOpen }] = await Promise.all([
     supabase.rpc("get_participants"),
     supabase
       .from("phase_progress")
       .select("id,user_email,phase,status,proof_url,caption,submitted_at")
       .eq("status", "pending")
       .order("submitted_at", { ascending: true }),
+    supabase.rpc("signups_open"),
   ]);
 
   return (
     <AdminPanel
       participants={(participants as ParticipantRow[]) ?? []}
       pending={(pending as PendingRow[]) ?? []}
+      signupsOpen={signupsOpen === true}
     />
   );
 }

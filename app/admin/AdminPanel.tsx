@@ -17,9 +17,11 @@ const STATUS_COLOR: Record<string, string> = {
 export default function AdminPanel({
   participants,
   pending,
+  signupsOpen,
 }: {
   participants: ParticipantRow[];
   pending: PendingRow[];
+  signupsOpen: boolean;
 }) {
   const supabase = supabaseBrowser();
   const router = useRouter();
@@ -28,6 +30,21 @@ export default function AdminPanel({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [addEmail, setAddEmail] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  const [open, setOpen] = useState(signupsOpen);
+  const [lockBusy, setLockBusy] = useState(false);
+
+  async function toggleSignups() {
+    const next = !open;
+    if (next && !confirm("Unlock sign-ups? ANYONE with any email will be able to sign in and join, not just your registered list. Only do this for live walk-ins.")) return;
+    setLockBusy(true);
+    const { error } = await supabase.rpc("admin_set_signups_open", { p_open: next });
+    setLockBusy(false);
+    if (error) setMsg(error.message);
+    else {
+      setOpen(next);
+      startTransition(() => router.refresh());
+    }
+  }
 
   async function review(id: string, status: "approved" | "rejected") {
     setBusyId(id);
@@ -97,6 +114,35 @@ export default function AdminPanel({
       <AutoRefresh ms={20000} />
       <div className="text-xs uppercase tracking-[0.2em] text-accent2">admin panel</div>
       <h1 className="text-3xl font-bold mt-1">Control room</h1>
+
+      {/* Sign-up lock */}
+      <div
+        className={`mt-5 rounded-xl border p-3 flex items-center justify-between gap-3 ${
+          open ? "border-yellow-500/40 bg-yellow-500/5" : "border-white/10 bg-panel/40"
+        }`}
+      >
+        <div>
+          <div className="text-sm font-semibold text-ink">
+            Sign-ups: {open ? "🔓 OPEN to anyone" : "🔒 registered emails only"}
+          </div>
+          <div className="text-xs text-muted mt-0.5">
+            {open
+              ? "Anyone with any email can sign in and is auto-added to the roster. Lock this back before you walk away."
+              : "Only emails on your list below can sign in. Unlock only for live walk-ins."}
+          </div>
+        </div>
+        <button
+          onClick={toggleSignups}
+          disabled={lockBusy}
+          className={`shrink-0 px-3 py-1.5 rounded text-sm font-semibold disabled:opacity-50 ${
+            open
+              ? "bg-accent text-black"
+              : "border border-yellow-500/40 text-yellow-200 hover:bg-yellow-500/10"
+          }`}
+        >
+          {lockBusy ? "…" : open ? "Lock it" : "Unlock"}
+        </button>
+      </div>
 
       {/* Tabs */}
       <div className="mt-6 flex gap-2 border-b border-white/10">

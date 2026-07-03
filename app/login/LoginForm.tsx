@@ -37,9 +37,10 @@ export default function LoginForm() {
     const cleaned = email.trim().toLowerCase();
 
     // Pre-check the allowlist so non-registered emails get a clear error
-    // instead of a "check your email" that never arrives.
+    // instead of a "check your email" that never arrives. signup_gate also
+    // auto-enrolls the email when admins have unlocked open sign-ups.
     const { data: ok, error: lookupErr } = await supabase
-      .rpc("is_email_allowed", { check_email: cleaned });
+      .rpc("signup_gate", { check_email: cleaned });
 
     if (lookupErr) {
       setState("error");
