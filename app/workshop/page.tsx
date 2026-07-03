@@ -151,19 +151,20 @@ export default async function WorkshopPage() {
         </li>
         <li>
           Paste the master prompt below, then your chosen idea right after the last line. Hit Enter. Then just{" "}
-          <strong>keep clicking the green buttons</strong> Antigravity shows — Run, Accept, Allow, Keep. Let the
-          agent do its job. Don't try to read every line of code.
+          <strong>keep clicking the green buttons</strong> Antigravity shows (Run, Accept, Allow, Keep). Let the
+          agent do its job. You don't need to read every line of code it writes.
         </li>
       </ol>
 
       <Callout kind="check" title="Let it cook">
-        The whole point of Antigravity is that you don't write or read code — you watch the agent write it and click
+        The whole point of Antigravity is that you don't write or read code. You watch the agent write it and click
         Accept. If it crashes, paste the error back and say "fix this." That's the entire loop.
       </Callout>
 
       <Callout kind="warn" title="Watch your model limits">
-        AI agents get rate-limited or throttled if you hammer the biggest model. Start on the smallest one. Switch
-        up only when it gets genuinely stuck. Otherwise you'll hit a wall mid-workshop.
+        Every model in Antigravity has a usage limit, and the big ones run out fastest. Start on the smallest or
+        "Fast" model; it handles most of this workshop fine. Switch up only when it's genuinely stuck (same error
+        twice in a row). Your model limit is your fuel for the evening, so spend it where it matters.
       </Callout>
 
       <MediaSlot kind="video" caption="watch: full workshop loop — paste prompt, hit run, keep clicking accept" />
@@ -171,8 +172,8 @@ export default async function WorkshopPage() {
       {/* The master prompt */}
       <h2>The master prompt</h2>
       <p>
-        Copy this. Paste it into Antigravity's chat. Then at the bottom — right after "build a project with the following
-        idea and concept:" — paste your chosen idea (see the gallery below).
+        Copy this. Paste it into Antigravity's chat. Then at the bottom, right after "build a project with the following
+        idea and concept:", paste your chosen idea (see the gallery below).
       </p>
 
       <Code language="prompt">{MASTER_PROMPT}</Code>
@@ -183,11 +184,11 @@ export default async function WorkshopPage() {
       </Callout>
 
       {/* The ideas */}
-      <h2 id="ideas">Idea gallery — pick one (or write your own)</h2>
+      <h2 id="ideas">Idea gallery: pick one (or write your own)</h2>
       <p>
-        Each card is a starting point. Copy the title + the sentence below it into the prompt. Or remix two —
-        a galaxy collision <em>inside</em> a wormhole, lighting from gravity instead of voltage, whatever you want.
-        Going crazy is encouraged.
+        Each card is a starting point. Copy the title plus the sentence below it into the prompt. Or remix two:
+        a galaxy collision <em>inside</em> a wormhole, lightning from gravity instead of voltage, whatever you want.
+        Wild ideas are encouraged.
       </p>
 
       <div className="grid sm:grid-cols-2 gap-3 not-prose my-4">
@@ -231,7 +232,7 @@ export default async function WorkshopPage() {
 
       <Callout kind="check" title="A good sim has">
         Real physics under the hood, dense smooth motion, color that means something, and a moment where you go
-        "huh, that's actually beautiful." If you've got that — you're done.
+        "huh, that's actually beautiful." If you've got that, you're done.
       </Callout>
 
       {/* Push to GitHub */}
@@ -281,26 +282,26 @@ git push -u origin main`}</code></pre>
       <h2>If it breaks</h2>
       <ul>
         <li>
-          <strong>Window opens then closes instantly</strong> — paste the error from Antigravity's terminal back
+          <strong>Window opens then closes instantly:</strong> paste the error from Antigravity's terminal back
           into chat: "this crashed, fix it."
         </li>
         <li>
-          <strong>Black window, nothing rendering</strong> — likely a coord issue. Say "the canvas is black,
+          <strong>Black window, nothing rendering:</strong> likely a coordinate issue. Say "the canvas is black,
           particles are off-screen."
         </li>
         <li>
-          <strong>Runs at 2 fps</strong> — say "this is too slow on my CPU, reduce particle count to 1000 and use
+          <strong>Runs at 2 fps:</strong> say "this is too slow on my CPU, reduce particle count to 1000 and use
           smaller radius."
         </li>
         <li>
-          <strong>Antigravity refuses or hits a rate limit</strong> — switch to a different model in the chat picker.
+          <strong>Antigravity refuses or hits a rate limit:</strong> switch to a different model in the chat picker.
           Or fall back to{" "}
           <a href="https://claude.ai" target="_blank" rel="noreferrer">claude.ai</a> /{" "}
           <a href="https://chatgpt.com" target="_blank" rel="noreferrer">chatgpt.com</a> in your browser, paste the
           master prompt + idea there, and copy the code into a file in Antigravity manually.
         </li>
         <li>
-          <strong>Stuck anywhere else</strong> —{" "}
+          <strong>Stuck anywhere else:</strong> ask in{" "}
           <Link href="/chat" className="text-accent">
             chat
           </Link>

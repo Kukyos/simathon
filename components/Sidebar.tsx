@@ -27,8 +27,8 @@ const SECTIONS: { label: string; links: { href: string; label: string; n?: strin
   {
     label: "community",
     links: [
-      { href: "/chat", label: "Chat", locked: true },
-      { href: "/polls", label: "Polls", locked: true },
+      { href: "/chat", label: "Chat" },
+      { href: "/polls", label: "Polls" },
       { href: "/participants", label: "Participants", locked: true },
       { href: "/gallery", label: "Gallery", locked: true },
     ],

@@ -24,7 +24,7 @@ export default async function AdminPage() {
     );
   }
 
-  const [{ data: participants }, { data: pending }, { data: signupsOpen }] = await Promise.all([
+  const [{ data: participants }, { data: pending }, { data: signupsOpen }, { data: chatLocked }] = await Promise.all([
     supabase.rpc("get_participants"),
     supabase
       .from("phase_progress")
@@ -32,6 +32,7 @@ export default async function AdminPage() {
       .eq("status", "pending")
       .order("submitted_at", { ascending: true }),
     supabase.rpc("signups_open"),
+    supabase.rpc("chat_locked"),
   ]);
 
   return (
@@ -39,6 +40,7 @@ export default async function AdminPage() {
       participants={(participants as ParticipantRow[]) ?? []}
       pending={(pending as PendingRow[]) ?? []}
       signupsOpen={signupsOpen === true}
+      chatLocked={chatLocked === true}
     />
   );
 }

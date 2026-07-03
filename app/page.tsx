@@ -57,8 +57,9 @@ export default async function Home() {
         <div className="mt-6 rounded-xl border border-yellow-500/30 bg-yellow-500/5 px-4 py-3 text-sm text-yellow-100/90">
           <div className="font-semibold text-yellow-200">Workshop hasn't started yet.</div>
           <div className="mt-1">
-            Before we begin: install prerequisites (Setup) and submit Phase 1. Everything else unlocks when
-            the meeting starts{startsAt ? ` — ${startsAt.toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}` : ""}.
+            Before we begin: install prerequisites (Setup) and submit Phase 1. Chat and polls are already
+            open, so say hi or ask anything. The build pages unlock when the meeting starts
+            {startsAt ? ` (${startsAt.toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })})` : ""}.
           </div>
         </div>
       )}
@@ -131,12 +132,12 @@ export default async function Home() {
       <section className="mt-10 grid sm:grid-cols-2 gap-3">
         {[
           { href: "/setup", n: "01", t: "Setup", d: "Three installs + a GitHub account. About 15 minutes. Do this first.", always: true },
-          { href: "/blackhole", n: "02", t: "The demo", d: "What you'll see live — and the physics behind it. Download my black hole sim.", always: false },
+          { href: "/blackhole", n: "02", t: "The demo", d: "What you'll see live, and the physics behind it. Download my black hole sim.", always: false },
           { href: "/workshop", n: "03", t: "Build", d: "How the workshop works. Pick a concept, paste the prompt, watch it come alive.", always: false },
           { href: "/hackathon", n: "04", t: "Hackathon", d: "Rules, theme, judging, prizes.", always: true },
           { href: "/participants", n: "05", t: "Participants", d: "Who else is here. Who's signed in. Who's submitted. Live.", always: false },
           { href: "/gallery", n: "06", t: "Gallery", d: "All the submissions. Click to view.", always: false },
-          { href: "/chat", n: "07", t: "Chat", d: "Ask anything. Live during the workshop, async during the build week.", always: false },
+          { href: "/chat", n: "07", t: "Chat", d: "Open now. Ask anything, say hi, get unstuck. Live during the workshop, async after.", always: true },
         ].filter((c) => open || c.always).map((c) => (
           <Link
             key={c.href}
@@ -152,7 +153,7 @@ export default async function Home() {
         ))}
       </section>
 
-      <div className="mt-10 text-xs text-muted">Tip: bookmark this page. You'll be back.</div>
+      <div className="mt-10 text-xs text-muted">Tip: bookmark this page. It's your home base for the whole week.</div>
     </div>
   );
 }

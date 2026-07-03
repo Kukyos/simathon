@@ -114,9 +114,9 @@ export default function PhaseForm({
           }`}
         >
           status: <strong>{existing.status}</strong>
-          {existing.status === "pending" && " — waiting on an admin to look at it."}
-          {existing.status === "approved" && " — you're good. move on."}
-          {existing.status === "rejected" && " — re-submit with what the admin asked for."}
+          {existing.status === "pending" && " · an admin will review it soon, no action needed."}
+          {existing.status === "approved" && " · all set, you're clear for this phase!"}
+          {existing.status === "rejected" && " · check the admin's note and re-submit, you're close."}
         </div>
       )}
 

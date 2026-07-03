@@ -10,15 +10,16 @@ export default function SetupPage() {
       <div className="text-xs uppercase tracking-[0.2em] text-accent2">01 · before the workshop</div>
       <h1 className="text-3xl font-bold mt-1">Setup</h1>
       <p className="text-ink/80 mt-2 text-[15px]">
-        Three installs and one signup. About 15 minutes total. Do this <strong>before</strong> the workshop
-        starts — we'll spend the first 5 minutes checking everyone got here. If you show up mid-workshop
-        without setup done, you'll be behind for the whole thing.
+        Welcome! Before the workshop there are three installs and one signup, about 15 minutes total.
+        Doing it <strong>before</strong> we start means you spend the workshop building your sim instead
+        of watching download bars. And if anything refuses to install, you have plenty of time to ask in
+        chat and get it sorted.
       </p>
 
-      <Callout title="What you're installing, in one line">
+      <Callout title="What you're installing, in one line each">
         <strong>Python</strong> runs your sim. <strong>Git</strong> uploads your code to the internet.
-        <strong> GitHub</strong> is where the code lives. <strong>Antigravity</strong> is the editor
-        with an AI agent that writes the code for you.
+        <strong> GitHub</strong> is where the code lives so others can see it. <strong>Antigravity</strong> is
+        the editor with an AI agent that writes the code for you. That's the whole toolkit.
       </Callout>
 
       {/* Step 1 */}
@@ -29,9 +30,10 @@ export default function SetupPage() {
           <a href="https://www.python.org/downloads/" target="_blank" rel="noreferrer">
             python.org/downloads
           </a>
-          . <strong>You need Python 3.10, 3.11, or 3.12</strong> — Taichi doesn't support anything
-          newer. The big yellow button gives you 3.13 or 3.14, so <strong>don't click it</strong>:
-          scroll down to "Looking for a specific release?" and grab the latest 3.12.
+          . <strong>You need Python 3.10, 3.11, or 3.12</strong> because Taichi (the graphics library
+          we use) doesn't support anything newer yet. Heads up: the big yellow button gives you 3.13
+          or 3.14, so skip it. Scroll down to "Looking for a specific release?" and grab the latest 3.12
+          instead.
         </li>
         <li>
           Run the installer.
@@ -55,8 +57,9 @@ export default function SetupPage() {
       {/* Step 2 */}
       <h2>2 · Install Git</h2>
       <p>
-        Git is the tool that uploads your code to GitHub. Antigravity's AI will run it for you, but only if it's
-        already installed on your machine.
+        Git is the tool that moves code between your laptop and GitHub (it also keeps a history of every
+        change, which is why programmers use it for everything). You won't need to learn any Git commands
+        today: Antigravity's AI runs them for you. It just needs Git installed on your machine first.
       </p>
       <ol>
         <li>
@@ -64,8 +67,8 @@ export default function SetupPage() {
           <a href="https://git-scm.com/download/win" target="_blank" rel="noreferrer">
             git-scm.com/download/win
           </a>
-          . The download starts automatically. Run the installer and click Next through every screen — the defaults
-          are correct (including the credential manager, which does GitHub login for you later).
+          . The download starts automatically. Run the installer and click Next through every screen. The defaults
+          are all correct, including the credential manager that handles GitHub login for you later.
         </li>
         <li>
           <strong>Mac:</strong> open Terminal (Cmd+Space, type "Terminal", Enter). Paste{" "}
@@ -83,8 +86,12 @@ export default function SetupPage() {
       {/* Step 3 */}
       <h2>3 · Make a GitHub account</h2>
       <p>
-        GitHub is where your code goes at the end. Free, 60 seconds. Skip if you already have one — just remember
-        the login.
+        GitHub is a website where people store and share code. When your sim is done, you'll upload
+        (or "push") it there, and that link is what you submit for the hackathon. It's how the judges see
+        your code, how other participants can peek at what you built, and honestly a nice thing to have
+        beyond this event: every programmer you'll ever meet has a GitHub profile, and yours starts here.
+        It's free and takes about a minute. Already have an account? Skip this step, just make sure you
+        remember the login.
       </p>
       <ol>
         <li>
@@ -127,10 +134,14 @@ export default function SetupPage() {
 
       <MediaSlot kind="video" src="https://youtu.be/o4IQF9WWa8M" caption="watch: install antigravity + first sign-in" />
 
-      <Callout kind="warn" title="Model picker — start cheap">
-        Antigravity's agent runs on multiple AI models with different rate limits and costs. Start with the
-        cheapest option that gives sensible answers. If it stops working mid-sim ("rate limited"), switch to a
-        stronger one. Don't burn the most expensive model on your first prompt — save it for when you're stuck.
+      <Callout kind="warn" title="Save your model limit for when it counts">
+        One thing worth knowing before you start: Antigravity's AI agent can run on several different models,
+        and each one has a usage limit. The big, smart models (the ones marked "Pro" or "High") have the
+        smallest limits. If you use a big model for every little thing, you can run out mid-workshop and get
+        stuck waiting for the limit to reset. So here's the play: start on the smallest or "Fast" model in the
+        picker. It handles most requests fine. Only switch up to a bigger model when the small one is genuinely
+        stuck (same error twice in a row, or output that makes no sense). Think of the big model as your
+        emergency budget, not your default.
       </Callout>
 
       <Callout kind="check" title="You should now have">
@@ -151,7 +162,7 @@ git --version`}</code></pre>
           </div>
         </li>
         <li>
-          You should see two version lines — Python starting with <code>3.10</code>, <code>3.11</code>{" "}
+          You should see two version lines: Python starting with <code>3.10</code>, <code>3.11</code>{" "}
           or <code>3.12</code>, and any Git version.
         </li>
         <li>
@@ -172,28 +183,29 @@ git --version`}</code></pre>
 
       {/* Stuck */}
       <h2>If something went wrong</h2>
+      <p>Totally normal, setup hiccups happen to everyone. Find your symptom below:</p>
       <ul>
         <li>
-          <strong>Antigravity says it can't find Python</strong> — reinstall Python with "Add to PATH" ticked,
+          <strong>Antigravity says it can't find Python:</strong> reinstall Python with "Add to PATH" ticked,
           then restart Antigravity.
         </li>
         <li>
-          <strong><code>git</code> command not found</strong> — reinstall Git; on Windows use the default options.
+          <strong><code>git</code> command not found:</strong> reinstall Git; on Windows use the default options.
         </li>
         <li>
-          <strong><code>python --version</code> says 3.13 or 3.14</strong> — Taichi won't run on it. Go back to
-          step 1 and install 3.12 as well (it can sit next to the newer one).
+          <strong><code>python --version</code> says 3.13 or 3.14:</strong> Taichi won't run on it. Go back to
+          step 1 and install 3.12 as well (it can sit next to the newer one, no conflict).
         </li>
         <li>
-          <strong>Terminal shows a red error</strong> — copy the error, paste it into Antigravity's chat, say
+          <strong>Terminal shows a red error:</strong> copy the error, paste it into Antigravity's chat, say
           "fix this". It usually can.
         </li>
         <li>
-          <strong>Nothing works</strong> — take a screenshot, drop it in{" "}
+          <strong>None of the above helped:</strong> take a screenshot and drop it in{" "}
           <Link href="/chat" className="text-accent">
             chat
           </Link>
-          .
+          . Someone will get you unstuck.
         </li>
       </ul>
 

@@ -18,10 +18,12 @@ export default function AdminPanel({
   participants,
   pending,
   signupsOpen,
+  chatLocked,
 }: {
   participants: ParticipantRow[];
   pending: PendingRow[];
   signupsOpen: boolean;
+  chatLocked: boolean;
 }) {
   const supabase = supabaseBrowser();
   const router = useRouter();
@@ -32,6 +34,19 @@ export default function AdminPanel({
   const [msg, setMsg] = useState<string | null>(null);
   const [open, setOpen] = useState(signupsOpen);
   const [lockBusy, setLockBusy] = useState(false);
+  const [chatLock, setChatLock] = useState(chatLocked);
+  const [chatBusy, setChatBusy] = useState(false);
+
+  async function toggleChatLock() {
+    setChatBusy(true);
+    const { error } = await supabase.rpc("admin_set_chat_locked", { p_locked: !chatLock });
+    setChatBusy(false);
+    if (error) setMsg(error.message);
+    else {
+      setChatLock(!chatLock);
+      startTransition(() => router.refresh());
+    }
+  }
 
   async function toggleSignups() {
     const next = !open;
@@ -191,6 +206,35 @@ export default function AdminPanel({
           }`}
         >
           {lockBusy ? "…" : open ? "Lock it" : "Unlock"}
+        </button>
+      </div>
+
+      {/* Chat lock */}
+      <div
+        className={`mt-3 rounded-xl border p-3 flex items-center justify-between gap-3 ${
+          chatLock ? "border-red-500/40 bg-red-500/5" : "border-white/10 bg-panel/40"
+        }`}
+      >
+        <div>
+          <div className="text-sm font-semibold text-ink">
+            Chat: {chatLock ? "🔒 locked (read-only)" : "🟢 open"}
+          </div>
+          <div className="text-xs text-muted mt-0.5">
+            {chatLock
+              ? "Only admins can post. Everyone else can read."
+              : "Everyone signed in can post. Lock it if the room gets noisy."}
+          </div>
+        </div>
+        <button
+          onClick={toggleChatLock}
+          disabled={chatBusy}
+          className={`shrink-0 px-3 py-1.5 rounded text-sm font-semibold disabled:opacity-50 ${
+            chatLock
+              ? "bg-accent text-black"
+              : "border border-red-500/40 text-red-200 hover:bg-red-500/10"
+          }`}
+        >
+          {chatBusy ? "…" : chatLock ? "Unlock chat" : "Lock chat"}
         </button>
       </div>
 

@@ -18,11 +18,13 @@ export default function ChatRoom({
   userEmail,
   displayName,
   isAdmin,
+  locked = false,
   initialMessages,
 }: {
   userEmail: string;
   displayName: string;
   isAdmin: boolean;
+  locked?: boolean;
   initialMessages: Message[];
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -126,7 +128,11 @@ export default function ChatRoom({
     if (error || !inserted) {
       setInput(content);
       console.error("[chat] insert failed:", error);
-      setErr(error?.message ?? "couldn't send");
+      setErr(
+        error?.message?.includes("chat_locked")
+          ? "chat is locked by the admins right now"
+          : error?.message ?? "couldn't send",
+      );
       return;
     }
 
@@ -228,6 +234,11 @@ export default function ChatRoom({
           );
         })}
       </div>
+      {locked && !isAdmin ? (
+        <div className="border-t border-white/10 p-3 text-center text-sm text-yellow-200/90 bg-yellow-500/5">
+          🔒 Chat is locked by the admins right now. You can still read along.
+        </div>
+      ) : (
       <form onSubmit={send} className="border-t border-white/10 p-3 flex gap-2 items-center">
         <input
           value={input}
@@ -245,6 +256,7 @@ export default function ChatRoom({
           {cooldown > 0 ? `${Math.ceil(cooldown / 1000)}s` : "send"}
         </button>
       </form>
+      )}
       {err && (
         <div className="mx-3 mb-3 rounded-md border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">
           {err}

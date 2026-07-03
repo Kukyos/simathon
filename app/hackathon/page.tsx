@@ -22,7 +22,7 @@ export default function HackathonPage() {
           <Link href="/workshop#ideas" className="text-accent">
             idea gallery
           </Link>{" "}
-          or invent your own. The math has to be real. The look has to be yours. Beyond that — go crazy.
+          or invent your own. The math has to be real. The look has to be yours. Beyond that, anything goes.
         </div>
       </Callout>
 
@@ -30,7 +30,8 @@ export default function HackathonPage() {
       <h2>Timeline</h2>
       <ul>
         <li>
-          <strong>Workshop day</strong> · Sunday, July 5, 6 PM IST · we cover the tools and the prompt together.
+          <strong>Workshop day</strong> · Sunday, July 5, 5:30 PM IST · about an hour, and we'll run longer
+          if people are still building. We cover the tools and the prompt together.
         </li>
         <li>
           <strong>Build week</strong> · July 6–12 · you build your sim. Chat is live the whole time.
@@ -40,7 +41,7 @@ export default function HackathonPage() {
         </li>
         <li>
           <strong>Results</strong> · winners announced on the group WhatsApp, and posted here on the site the
-          next day. No live call, no screen-sharing — your video does the talking.
+          next day. No live call, no screen-sharing. Your video does the talking.
         </li>
       </ul>
 
