@@ -59,7 +59,7 @@ export default async function Home() {
           <div className="mt-1">
             Before we begin: install prerequisites (Setup) and submit Phase 1. Chat and polls are already
             open, so say hi or ask anything. The build pages unlock when the meeting starts
-            {startsAt ? ` (${startsAt.toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })})` : ""}.
+            {startsAt ? ` (${startsAt.toLocaleString("en-IN", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" })} IST)` : ""}.
           </div>
         </div>
       )}

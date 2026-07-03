@@ -51,13 +51,15 @@ export default function LockedScreen({
         </div>
         {when && (
           <div className="text-xs text-muted mt-2">
-            {when.toLocaleString(undefined, {
+            {when.toLocaleString("en-IN", {
               weekday: "short",
               month: "short",
               day: "numeric",
               hour: "2-digit",
               minute: "2-digit",
-            })}
+              timeZone: "Asia/Kolkata",
+            })}{" "}
+            IST
           </div>
         )}
       </div>
