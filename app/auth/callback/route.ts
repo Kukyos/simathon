@@ -48,5 +48,25 @@ export async function GET(request: NextRequest) {
       `${url.origin}/login?error=${encodeURIComponent(errMsg)}`,
     );
   }
+
+  // First sign-in → send through onboarding. /onboard itself bounces anyone
+  // who already has a profile (or is an admin) straight to `next`, so this
+  // never traps returning users.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user?.email) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_email")
+      .eq("user_email", user.email.toLowerCase())
+      .maybeSingle();
+    if (!profile) {
+      const onboard = NextResponse.redirect(
+        `${url.origin}/onboard?next=${encodeURIComponent(next)}`,
+      );
+      // carry over the auth cookies already written to the original response
+      response.cookies.getAll().forEach((c) => onboard.cookies.set(c));
+      return onboard;
+    }
+  }
   return response;
 }

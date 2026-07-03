@@ -57,18 +57,24 @@ export default function AdminPanel({
     else startTransition(() => router.refresh());
   }
 
+  const ADD_LABEL: Record<string, (e: string) => string> = {
+    added: (e) => `✓ added ${e} — they can now sign in and onboard.`,
+    exists: (e) => `⚠ ${e} is ALREADY on the list (hasn't signed in yet).`,
+    exists_signed_in: (e) => `⚠ ${e} is ALREADY on the list and has signed in.`,
+  };
+
   async function addParticipant(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
     const clean = addEmail.trim().toLowerCase();
     if (!clean) return;
-    const { error } = await supabase.rpc("admin_add_participant", {
+    const { data, error } = await supabase.rpc("admin_add_participant", {
       p_email: clean,
       p_name: null,
     });
     if (error) setMsg(error.message);
     else {
-      setMsg(`✓ added ${clean} — they can now sign in and onboard.`);
+      setMsg((ADD_LABEL[data as string] ?? ADD_LABEL.added)(clean));
       setAddEmail("");
       startTransition(() => router.refresh());
     }
@@ -76,21 +82,65 @@ export default function AdminPanel({
 
   async function addMany(raw: string) {
     setMsg(null);
-    const emails = raw
+    const tokens = raw
       .split(/[,\s\n]+/)
       .map((e) => e.trim().toLowerCase())
-      .filter((e) => /.+@.+\..+/.test(e));
-    if (!emails.length) return;
-    let ok = 0;
+      .filter(Boolean);
+    const invalid = tokens.filter((t) => !/.+@.+\..+/.test(t));
+    const emails = [...new Set(tokens.filter((t) => /.+@.+\..+/.test(t)))];
+    const dupes = tokens.length - invalid.length - emails.length;
+    if (!emails.length && !invalid.length) return;
+    let added = 0;
+    let existing = 0;
+    const failed: string[] = [];
     for (const email of emails) {
-      const { error } = await supabase.rpc("admin_add_participant", {
+      const { data, error } = await supabase.rpc("admin_add_participant", {
         p_email: email,
         p_name: null,
       });
-      if (!error) ok++;
+      if (error) failed.push(`${email} (${error.message})`);
+      else if (data === "added") added++;
+      else existing++;
     }
-    setMsg(`✓ added ${ok} / ${emails.length}`);
+    const parts = [`${added} new`, `${existing} already on list`];
+    if (dupes) parts.push(`${dupes} duplicated in your paste`);
+    if (failed.length) parts.push(`FAILED: ${failed.join(", ")}`);
+    if (invalid.length) parts.push(`skipped as invalid: ${invalid.join(", ")}`);
+    setMsg(`${parts.join(" · ")} — total on list should now be checkable in the tab count. Re-paste the same list anytime to verify: it will report 0 new if everyone is in.`);
     startTransition(() => router.refresh());
+  }
+
+  async function forcePhase(email: string, phase: number, status: string | null) {
+    const approving = status !== "approved";
+    if (
+      !confirm(
+        approving
+          ? `Force-approve phase ${phase} for ${email}? Works even without a submission.`
+          : `Reset phase ${phase} for ${email} back to nothing? Their upload record for this phase is wiped.`,
+      )
+    )
+      return;
+    setBusyId(`${email}-p${phase}`);
+    const { error } = await supabase.rpc("admin_set_phase", {
+      p_email: email,
+      p_phase: phase,
+      p_status: approving ? "approved" : "none",
+    });
+    setBusyId(null);
+    if (error) setMsg(error.message);
+    else startTransition(() => router.refresh());
+  }
+
+  async function approveAllPending() {
+    if (!confirm(`Approve ALL ${pending.length} pending phase submissions?`)) return;
+    setBusyId("approve-all");
+    const { data, error } = await supabase.rpc("admin_approve_all_pending");
+    setBusyId(null);
+    if (error) setMsg(error.message);
+    else {
+      setMsg(`✓ approved ${data} pending submission(s).`);
+      startTransition(() => router.refresh());
+    }
   }
 
   async function removeParticipant(email: string) {
@@ -172,6 +222,14 @@ export default function AdminPanel({
           {pending.length === 0 ? (
             <div className="text-sm text-muted">Nothing pending. You're free.</div>
           ) : (
+            <>
+            <button
+              onClick={approveAllPending}
+              disabled={busyId === "approve-all"}
+              className="mb-3 px-3 py-1.5 rounded bg-green-500/15 border border-green-500/40 text-green-200 text-xs font-semibold hover:bg-green-500/25 disabled:opacity-50"
+            >
+              {busyId === "approve-all" ? "…" : `approve all ${pending.length}`}
+            </button>
             <ul className="space-y-3">
               {pending.map((p) => (
                 <li key={p.id} className="rounded-xl border border-white/10 bg-panel/40 p-3 flex gap-3">
@@ -220,6 +278,7 @@ export default function AdminPanel({
                 </li>
               ))}
             </ul>
+            </>
           )}
         </section>
       )}
@@ -295,13 +354,34 @@ export default function AdminPanel({
                     {p.last_sign_in_at ? "signed in" : "never signed in"}
                   </div>
                 </div>
-                <div className="flex flex-col text-xs">
-                  <span className={STATUS_COLOR[p.phase1_status ?? ""] ?? "text-muted"}>
-                    p1: {p.phase1_status ?? "—"}
-                  </span>
-                  <span className={STATUS_COLOR[p.phase2_status ?? ""] ?? "text-muted"}>
-                    p2: {p.phase2_status ?? "—"}
-                  </span>
+                <div className="flex flex-col text-xs gap-0.5">
+                  {([1, 2] as const).map((ph) => {
+                    const st = ph === 1 ? p.phase1_status : p.phase2_status;
+                    const id = `${p.email}-p${ph}`;
+                    return (
+                      <span key={ph} className="flex items-center gap-1.5">
+                        <span className={STATUS_COLOR[st ?? ""] ?? "text-muted"}>
+                          p{ph}: {st ?? "—"}
+                        </span>
+                        <button
+                          onClick={() => forcePhase(p.email, ph, st)}
+                          disabled={busyId === id}
+                          title={
+                            st === "approved"
+                              ? `reset phase ${ph}`
+                              : `force-approve phase ${ph} (no submission needed)`
+                          }
+                          className={`px-1 rounded border text-[10px] leading-4 disabled:opacity-50 ${
+                            st === "approved"
+                              ? "border-white/10 text-muted hover:border-red-400/50 hover:text-red-300"
+                              : "border-green-500/30 text-green-300 hover:bg-green-500/10"
+                          }`}
+                        >
+                          {busyId === id ? "…" : st === "approved" ? "↺" : "✓"}
+                        </button>
+                      </span>
+                    );
+                  })}
                 </div>
                 <div className="text-xs">
                   {p.submission_title ? (

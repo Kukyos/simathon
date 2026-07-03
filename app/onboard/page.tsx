@@ -29,6 +29,14 @@ export default async function OnboardPage({
     <div className="fixed inset-0 z-50 bg-bg/95 backdrop-blur-sm flex items-center justify-center overflow-y-auto">
       <div className="w-full max-w-xl">
         <OnboardForm userEmail={user.email!.toLowerCase()} next={searchParams.next || "/setup"} />
+        <div className="text-center mt-4">
+          <a
+            href={searchParams.next || "/setup"}
+            className="text-xs text-muted hover:text-ink underline underline-offset-2"
+          >
+            skip for now →
+          </a>
+        </div>
       </div>
     </div>
   );
