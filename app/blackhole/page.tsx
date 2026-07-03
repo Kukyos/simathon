@@ -43,8 +43,9 @@ export default async function BlackHolePage() {
           download the demo (Python, any OS) ↓
         </a>
         <span className="text-xs text-muted">
-          unzip → <code className="text-ink/85">pip install taichi</code> →{" "}
-          <code className="text-ink/85">python kerr_blackhole.py</code> (Python 3.10–3.12, GPU recommended)
+          unzip → double-click <code className="text-ink/85">run.bat</code> (Windows) or run{" "}
+          <code className="text-ink/85">sh run.sh</code> (Mac). It finds or fetches a compatible
+          Python for you. GPU recommended.
         </span>
       </div>
 
