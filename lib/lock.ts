@@ -5,8 +5,12 @@
 // Supabase and bypass. If that matters, add an RLS check `now() >= (config.start_at)`
 // on the phase_progress + submissions inserts. For 50 school kids over 1 week, this is enough.
 
+// ponytail: hardcoded start time. The Vercel env var was stuck on 12:30 and
+// editing code deploys faster than dashboard fiddling. Change here if it moves.
+const WORKSHOP_START_AT = "2026-07-05T17:30:00+05:30";
+
 export function workshopStartAtIso(): string | null {
-  return process.env.NEXT_PUBLIC_WORKSHOP_START_AT || null;
+  return WORKSHOP_START_AT;
 }
 
 export function workshopStartAt(): Date | null {
