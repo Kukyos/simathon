@@ -9,8 +9,8 @@ import { isAdmin as checkIsAdmin } from "@/lib/admin";
 
 export const metadata = { title: "Black holes · Simathon" };
 
-// ponytail: pure content page. No db, no auth gate. The download is a static file in /public.
-// Drop the demo zip at: workshop-site/public/sim/simathon-blackhole-demo.zip
+// The zip is built from /kerr_raytracer at the repo root:
+//   Compress-Archive kerr_raytracer/* -> workshop-site/public/sim/simathon-blackhole-demo.zip
 const DEMO_HREF = "/sim/simathon-blackhole-demo.zip";
 
 export default async function BlackHolePage() {
@@ -18,18 +18,20 @@ export default async function BlackHolePage() {
   const { data: { user } } = await supabase.auth.getUser();
   const isAdmin = user ? await checkIsAdmin(supabase, user.email) : false;
   if (!isWorkshopOpen() && !isAdmin) {
-    return <LockedScreen startsAtIso={workshopStartAtIso()} title="The demo unlocks when the workshop starts." blurb="I'll show my black hole sim live in the meeting. This page (with the physics explainer and download) opens when the workshop begins." />;
+    return <LockedScreen startsAtIso={workshopStartAtIso()} title="The demo unlocks when the workshop starts." blurb="I'll show my black hole ray tracer live in the meeting. This page (with the full physics walkthrough and download) opens when the workshop begins." />;
   }
   return (
     <div className="prose-body max-w-3xl mx-auto">
       <div className="text-xs uppercase tracking-[0.2em] text-accent2">the demo</div>
-      <h1 className="text-3xl font-bold mt-1">The math behind the black hole</h1>
+      <h1 className="text-3xl font-bold mt-1">A real Kerr black-hole ray tracer</h1>
       <p className="text-ink/85 mt-2 text-[15px]">
-        At the live event you'll watch a black hole simulation running on a real GPU, then build your
-        own. This page is the physics underneath every pixel — the actual equations the demo integrates,
-        not hand-waving. Everything here is a non-rotating (Schwarzschild) black hole. In geometric units
-        we set <Eq>{String.raw`G = c = 1`}</Eq>, so a mass <Eq>{String.raw`M`}</Eq> has a length: its
-        horizon.
+        The demo is not a particle system with a dark circle drawn in the middle, and it is not a
+        post-processing warp filter. It is a <strong>rotating (Kerr) black hole</strong>, and every
+        pixel on screen is a photon traced <em>backwards</em> from the camera along an exact null
+        geodesic of the Kerr metric, integrated numerically on your GPU. Roughly a million
+        geodesics per frame, in ~500 lines of Python. This page derives everything the code does.
+        Everything is in geometric units, <Eq>{String.raw`G = c = M = 1`}</Eq>, so radii are
+        measured in units of the black hole's mass.
       </p>
 
       <div className="mt-6 flex flex-wrap items-center gap-3 not-prose">
@@ -38,187 +40,271 @@ export default async function BlackHolePage() {
           download
           className="px-4 py-2 rounded-md bg-accent text-black font-semibold text-sm"
         >
-          download the demo (Windows) ↓
+          download the demo (Python, any OS) ↓
         </a>
         <span className="text-xs text-muted">
-          ~unzip → run <code className="text-ink/85">BlackHoleSimulation.exe</code>. Keep the{" "}
-          <code className="text-ink/85">shaders/</code> folder next to it.
+          unzip → <code className="text-ink/85">pip install taichi</code> →{" "}
+          <code className="text-ink/85">python kerr_blackhole.py</code> (Python 3.10–3.12, GPU recommended)
         </span>
       </div>
 
-      <h2>Start from the metric</h2>
+      <Callout kind="check" title="Verify it, don't trust it">
+        Run <code>python kerr_blackhole.py --check</code>. It traces test photons and compares
+        against exact textbook results: the Schwarzschild critical impact parameter{" "}
+        <Eq>{String.raw`3\sqrt3\,M`}</Eq>, Hamiltonian conservation along every ray, ISCO radii,
+        and the frame-dragging asymmetry of a spinning hole. If the physics were faked, these
+        tests could not pass.
+      </Callout>
+
+      <h2>1 · The metric is the whole theory</h2>
       <p>
-        A black hole isn't a force — it's geometry. All of it falls out of one line element, the{" "}
-        <strong>Schwarzschild solution</strong> to Einstein's field equations for the vacuum around a
-        spherical mass:
+        General relativity says gravity is not a force — it's the geometry of spacetime, encoded in
+        a metric <Eq>{String.raw`g_{\mu\nu}`}</Eq>. For an uncharged spinning mass, the exact
+        solution of Einstein's field equations is the <strong>Kerr metric</strong> (1963). In
+        Boyer–Lindquist coordinates <Eq>{String.raw`(t, r, \theta, \varphi)`}</Eq>:
       </p>
       <Eq display>
-        {String.raw`ds^2 = -\left(1 - \frac{r_s}{r}\right)c^2\,dt^2 + \left(1 - \frac{r_s}{r}\right)^{-1} dr^2 + r^2\left(d\theta^2 + \sin^2\!\theta\, d\varphi^2\right)`}
+        {String.raw`ds^2 = -\left(1 - \tfrac{2r}{\Sigma}\right)dt^2 - \tfrac{4 a r \sin^2\theta}{\Sigma}\,dt\,d\varphi + \tfrac{\Sigma}{\Delta}dr^2 + \Sigma\, d\theta^2 + \left(r^2 + a^2 + \tfrac{2a^2 r \sin^2\theta}{\Sigma}\right)\sin^2\theta\, d\varphi^2`}
+      </Eq>
+      <Eq display>
+        {String.raw`\Sigma = r^2 + a^2\cos^2\theta, \qquad \Delta = r^2 - 2r + a^2`}
       </Eq>
       <p>
-        Every feature below is this one object read at a different radius. The single scale in it is the{" "}
-        <strong>Schwarzschild radius</strong>, where the <Eq>{String.raw`dt^2`}</Eq> coefficient hits
-        zero:
+        The single new parameter is the spin <Eq>{String.raw`a = J/M`}</Eq>, between 0 and 1. Set{" "}
+        <Eq>{String.raw`a = 0`}</Eq> and this collapses to the Schwarzschild metric — the sim has a
+        spin slider, so you can watch that limit happen. The event horizon sits where{" "}
+        <Eq>{String.raw`\Delta = 0`}</Eq>:
       </p>
-      <Eq display>{String.raw`r_s = \frac{2GM}{c^2}`}</Eq>
+      <Eq display>{String.raw`r_+ = 1 + \sqrt{1 - a^2}`}</Eq>
       <p>
-        Sun-mass → 3 km. Earth-mass → 9 mm. Sagittarius A* → ~12 million km. Everything from here is
-        measured in units of <Eq>{String.raw`r_s`}</Eq>.
-      </p>
-
-      <h2>The five things on screen</h2>
-
-      <h3>1. The event horizon — <Eq>{String.raw`r = r_s`}</Eq></h3>
-      <p>
-        The dark sphere. Surface where escape velocity equals <Eq>{String.raw`c`}</Eq>. Set{" "}
-        <Eq>{String.raw`\tfrac12 v^2 = GM/r`}</Eq> with <Eq>{String.raw`v = c`}</Eq> and you recover{" "}
-        <Eq>{String.raw`r_s`}</Eq> exactly — a Newtonian coincidence that happens to give the right
-        answer. It's not a wall; it's the radius where every future-pointing path leads inward.
+        Note the <Eq>{String.raw`dt\,d\varphi`}</Eq> cross term. That term does not exist for a
+        static mass, and it means spacetime itself is <em>dragged around</em> the spinning hole —
+        near the horizon you physically cannot stand still. This is frame dragging, and it's why
+        the shadow of a fast-spinning hole is D-shaped instead of circular.
       </p>
 
-      <h3>2. The photon sphere — <Eq>{String.raw`r = \tfrac{3}{2}\,r_s`}</Eq></h3>
+      <h2>2 · Light rays as Hamiltonian flow</h2>
       <p>
-        Light bends around a null geodesic. Reduced to the orbital plane, a photon's path obeys
+        Photons follow null geodesics. You could write the geodesic equation with Christoffel
+        symbols, but there is a cleaner, deeper formulation the demo actually uses: geodesics are
+        the trajectories of the <strong>super-Hamiltonian</strong>
+      </p>
+      <Eq display>{String.raw`\mathcal{H} = \tfrac{1}{2} g^{\mu\nu} p_\mu p_\nu, \qquad \mathcal{H} = 0 \text{ for light}`}</Eq>
+      <p>
+        Because the metric doesn't depend on <Eq>{String.raw`t`}</Eq> or{" "}
+        <Eq>{String.raw`\varphi`}</Eq>, two momenta are conserved along every ray: the energy{" "}
+        <Eq>{String.raw`E = -p_t`}</Eq> and the axial angular momentum{" "}
+        <Eq>{String.raw`L_z = p_\varphi`}</Eq>. For Kerr the Hamiltonian separates (this is the
+        same structure that gives the famous Carter constant):
       </p>
       <Eq display>
-        {String.raw`\left(\frac{du}{d\varphi}\right)^2 = \frac{1}{b^2} - u^2\left(1 - r_s\,u\right), \qquad u \equiv \frac{1}{r}`}
+        {String.raw`\mathcal{H} = \frac{1}{2\Sigma}\left[\, \Delta p_r^2 + p_\theta^2 - \frac{P(r)^2}{\Delta} + W(\theta)^2 \right]`}
+      </Eq>
+      <Eq display>
+        {String.raw`P(r) = E\,(r^2 + a^2) - a L_z, \qquad W(\theta) = \frac{L_z}{\sin\theta} - a E \sin\theta`}
       </Eq>
       <p>
-        where <Eq>{String.raw`b`}</Eq> is the impact parameter. Circular photon orbits require{" "}
-        <Eq>{String.raw`du/d\varphi = 0`}</Eq> and <Eq>{String.raw`d^2u/d\varphi^2 = 0`}</Eq>, which
-        solve to
-      </p>
-      <Eq display>{String.raw`r_{\text{ph}} = \frac{3GM}{c^2} = \tfrac{3}{2}\,r_s`}</Eq>
-      <p>
-        Light aimed inside the critical impact parameter <Eq>{String.raw`b_{\text{crit}} = \tfrac{3\sqrt3}{2}\,r_s \approx 2.6\,r_s`}</Eq>{" "}
-        falls in — that's why the black shadow looks bigger than the horizon. That number is the width of
-        the dark disk in the Event Horizon Telescope image.
-      </p>
-
-      <h3>3. The accretion disk — cut off at <Eq>{String.raw`r = 3\,r_s`}</Eq></h3>
-      <p>
-        For a massive particle the radial motion has an effective potential. The first two terms are pure
-        Newton; the third is the GR correction that changes everything:
+        Then the equations of motion are just Hamilton's equations — the same ones from classical
+        mechanics:
       </p>
       <Eq display>
-        {String.raw`V_{\text{eff}}(r) = -\frac{GMm}{r} + \frac{L^2}{2mr^2} - \frac{GM\,L^2}{c^2\,m\,r^3}`}
+        {String.raw`\frac{dx^i}{d\lambda} = \frac{\partial \mathcal{H}}{\partial p_i}, \qquad \frac{dp_i}{d\lambda} = -\frac{\partial \mathcal{H}}{\partial x^i}`}
       </Eq>
       <p>
-        That <Eq>{String.raw`-1/r^3`}</Eq> term means the potential no longer has a stable minimum for
-        small <Eq>{String.raw`r`}</Eq>. Below the <strong>innermost stable circular orbit</strong> there
-        are no stable orbits at all — matter spirals in:
-      </p>
-      <Eq display>{String.raw`r_{\text{ISCO}} = \frac{6GM}{c^2} = 3\,r_s`}</Eq>
-      <p>
-        Outside the ISCO, disk particles ride circular <strong>Keplerian</strong> orbits:
-      </p>
-      <Eq display>{String.raw`v(r) = \sqrt{\frac{GM}{r}}, \qquad \Omega(r) = \sqrt{\frac{GM}{r^3}}`}</Eq>
-      <p>
-        Friction heats the gas; a thin disk radiates as a local blackbody with the Shakura–Sunyaev
-        profile — hot and blue at the inner edge, cool and red outside:
-      </p>
-      <Eq display>
-        {String.raw`T(r) \propto \left(\frac{\dot{M}}{r^3}\right)^{1/4}\left(1 - \sqrt{\frac{r_{\text{in}}}{r}}\right)^{1/4}`}
-      </Eq>
-      <p>
-        We render ~200k particles on these orbits, colored by <Eq>{String.raw`T(r)`}</Eq>.
+        Five coupled ODEs per photon — <Eq>{String.raw`(r, \theta, \varphi, p_r, p_\theta)`}</Eq> —
+        with all derivatives worked out analytically (function <code>geodesic_rhs</code> in the
+        code), integrated with classic RK4 (<code>rk4_step</code>) and an adaptive step that
+        shrinks near the horizon. Since <Eq>{String.raw`\mathcal{H}`}</Eq> must stay exactly zero
+        along a light ray, the code recomputes it as it integrates: it's a built-in error gauge.
+        Typical drift is <Eq>{String.raw`\sim 10^{-6}`}</Eq>.
       </p>
 
-      <h3>4. Why one side is brighter — Doppler + redshift</h3>
+      <h2>3 · The camera is an observer, not a matrix</h2>
       <p>
-        The disk spins. The side rotating toward you is beamed brighter by the relativistic Doppler
-        factor; the whole thing is dimmed climbing out of the well. Observed intensity scales as
+        In GR you can't just aim a view frustum — "direction" is only defined in some observer's
+        local frame. The demo's camera is a <strong>ZAMO</strong> (zero-angular-momentum observer):
+        the locally non-rotating frame at the camera point. Its orthonormal tetrad{" "}
+        <Eq>{String.raw`\{e_{\hat t}, e_{\hat r}, e_{\hat\theta}, e_{\hat\varphi}\}`}</Eq> converts
+        each pixel's unit view direction <Eq>{String.raw`\vec n`}</Eq> into a physical photon
+        4-momentum:
       </p>
       <Eq display>
-        {String.raw`\frac{I_{\text{obs}}}{I_{\text{emit}}} = \delta^{\,4}, \qquad \delta = \frac{1}{\gamma\left(1 - \beta\cos\theta\right)}`}
+        {String.raw`p^\mu = e_{\hat t}^{\;\mu} + n_r\, e_{\hat r}^{\;\mu} + n_\theta\, e_{\hat\theta}^{\;\mu} + n_\varphi\, e_{\hat\varphi}^{\;\mu}`}
       </Eq>
       <p>
-        and light climbing out is gravitationally redshifted by
-      </p>
-      <Eq display>{String.raw`1 + z = \left(1 - \frac{r_s}{r}\right)^{-1/2}`}</Eq>
-      <p>
-        At the horizon <Eq>{String.raw`z \to \infty`}</Eq> — infalling light fades to black rather than
-        vanishing at a hard edge.
-      </p>
-
-      <h3>5. The lensing — bending starlight</h3>
-      <p>
-        Far from the hole, a light ray passing at impact parameter <Eq>{String.raw`b`}</Eq> is deflected
-        by
-      </p>
-      <Eq display>{String.raw`\alpha = \frac{4GM}{c^2 b} = \frac{2\,r_s}{b}`}</Eq>
-      <p>
-        That factor of 4 (twice the Newtonian prediction) is exactly what Eddington measured in 1919. A
-        star directly behind the hole smears into an <strong>Einstein ring</strong>. In the demo, the
-        lensing fragment shader integrates the photon equation from §2 per pixel and samples the sky
-        texture at the deflected angle.
+        from which <Eq>{String.raw`E`}</Eq>, <Eq>{String.raw`L_z`}</Eq>,{" "}
+        <Eq>{String.raw`p_r`}</Eq>, <Eq>{String.raw`p_\theta`}</Eq> follow by lowering indices with
+        the metric (<code>camera_ray</code>). A subtle payoff: the ZAMO frame already rotates with
+        the dragged spacetime at rate <Eq>{String.raw`\omega = 2ar/A`}</Eq> — the frame dragging is
+        in the camera too, because it has to be.
       </p>
 
-      <h2>The equation the demo actually integrates</h2>
+      <h2>4 · The accretion disk, done relativistically</h2>
+      <h3>Where it ends: the ISCO</h3>
       <p>
-        Everything cinematic — lensing, the photon ring, the shadow edge — is one ODE. Photons follow
-        null geodesics of the metric:
+        Gas in the disk rides circular orbits, but GR forbids stable circular orbits too close in.
+        The <strong>innermost stable circular orbit</strong> depends on spin via Bardeen's 1972
+        formula (implemented in <code>isco_radius</code>, wired to the spin slider):
       </p>
       <Eq display>
-        {String.raw`\frac{d^2 x^\mu}{d\lambda^2} + \Gamma^{\mu}_{\;\nu\rho}\,\frac{dx^\nu}{d\lambda}\,\frac{dx^\rho}{d\lambda} = 0`}
+        {String.raw`r_{\text{ISCO}} = 3 + Z_2 - \sqrt{(3 - Z_1)(3 + Z_1 + 2 Z_2)}`}
+      </Eq>
+      <Eq display>
+        {String.raw`Z_1 = 1 + (1-a^2)^{1/3}\left[(1+a)^{1/3} + (1-a)^{1/3}\right], \qquad Z_2 = \sqrt{3a^2 + Z_1^2}`}
       </Eq>
       <p>
-        The <Eq>{String.raw`\Gamma^{\mu}_{\;\nu\rho}`}</Eq> (Christoffel symbols) come straight from the
-        Schwarzschild metric and are textbook. For a static spherical hole you reduce it to the 2D{" "}
-        <Eq>{String.raw`u(\varphi)`}</Eq> equation above and march it with RK4 — two ODEs per ray. That's
-        the whole "real GR" part. No Einstein Toolkit required.
+        <Eq>{String.raw`a=0`}</Eq> gives the Schwarzschild answer <Eq>{String.raw`6M`}</Eq>;{" "}
+        <Eq>{String.raw`a \to 1`}</Eq> lets the disk plunge all the way to{" "}
+        <Eq>{String.raw`1M`}</Eq>. Drag the spin slider and watch the inner edge move — that's a
+        real prediction, not a parameter.
       </p>
+      <h3>How it moves and glows</h3>
+      <p>
+        Each ring orbits with the exact Kerr circular-orbit angular velocity{" "}
+        <Eq>{String.raw`\Omega = 1/(r^{3/2} + a)`}</Eq>, and shines as a blackbody with the
+        Shakura–Sunyaev thin-disk temperature profile (friction converts orbital energy to heat):
+      </p>
+      <Eq display>
+        {String.raw`T(r) \propto r^{-3/4}\left(1 - \sqrt{r_{\text{in}}/r}\right)^{1/4}`}
+      </Eq>
+      <p>
+        peaking around <Eq>{String.raw`8000\,\text{K}`}</Eq> near the inner edge and cooling to dull
+        red outside — the colors on screen come from the Planckian locus, not an artist's palette.
+      </p>
+
+      <h2>5 · One number carries all the relativity: the redshift factor</h2>
+      <p>
+        When a traced ray hits the disk, how bright and what color should that pixel be? The photon
+        was emitted by gas orbiting at a good fraction of <Eq>{String.raw`c`}</Eq>, deep in a
+        gravity well. Everything — gravitational redshift <em>and</em> special-relativistic Doppler
+        — collapses into a single exact number, the ratio of observed to emitted photon energy:
+      </p>
+      <Eq display>
+        {String.raw`g \;=\; \frac{E_{\text{obs}}}{E_{\text{em}}} \;=\; \frac{1}{u^t\,(E - \Omega L_z)}, \qquad u^t = \frac{1}{\sqrt{-(g_{tt} + 2\Omega g_{t\varphi} + \Omega^2 g_{\varphi\varphi})}}`}
+      </Eq>
+      <p>
+        Here <Eq>{String.raw`E`}</Eq> and <Eq>{String.raw`L_z`}</Eq> are the photon's conserved
+        quantities (already known from the camera step — nothing extra to integrate) and{" "}
+        <Eq>{String.raw`u^t`}</Eq> is the disk's orbital 4-velocity. Then two exact transformation
+        laws finish the job:
+      </p>
+      <ul>
+        <li>
+          <strong>Beaming:</strong> bolometric intensity transforms as{" "}
+          <Eq>{String.raw`I_{\text{obs}} = g^4\, I_{\text{em}}`}</Eq> — the side of the disk
+          rotating toward you is dramatically brighter. That lopsided glow in the demo (and in the
+          real EHT images) is <Eq>{String.raw`g^4`}</Eq>.
+        </li>
+        <li>
+          <strong>Color:</strong> a blackbody at <Eq>{String.raw`T`}</Eq> observed with shift{" "}
+          <Eq>{String.raw`g`}</Eq> is still a blackbody, at temperature{" "}
+          <Eq>{String.raw`g\,T`}</Eq>. Approaching side: hotter and bluer. Receding side: cooler
+          and redder.
+        </li>
+      </ul>
+
+      <h2>6 · The stuff you get for free</h2>
+      <p>
+        Because the geodesics are real, the famous phenomena are not features that were programmed
+        in — they <em>emerge</em>:
+      </p>
+      <ul>
+        <li>
+          <strong>The shadow.</strong> Rays aimed inside the critical impact parameter never come
+          back. For <Eq>{String.raw`a=0`}</Eq> that's{" "}
+          <Eq>{String.raw`b_{\text{crit}} = 3\sqrt{3}\,M \approx 5.2\,M`}</Eq> — the size of the
+          dark patch in the Event Horizon Telescope images of M87* and Sgr A*.
+        </li>
+        <li>
+          <strong>The photon ring.</strong> Light that circles the hole once (or twice, or n
+          times) before escaping piles up in a thin bright ring hugging the shadow.
+        </li>
+        <li>
+          <strong>The "Interstellar" band.</strong> The glow arcing <em>over</em> the shadow is the
+          far side of the disk, behind the hole — its light is bent up and over the top. The band
+          under the shadow is the disk's underside.
+        </li>
+        <li>
+          <strong>Frame dragging.</strong> At <Eq>{String.raw`a=0.95`}</Eq>, a prograde photon at{" "}
+          <Eq>{String.raw`b = 3.2\,M`}</Eq> escapes where a non-spinning hole would have swallowed
+          it, while retrograde light is captured out to <Eq>{String.raw`\approx 6.9\,M`}</Eq>. The
+          shadow flattens on the prograde side into the characteristic "D". (This is one of the{" "}
+          <code>--check</code> tests.)
+        </li>
+        <li>
+          <strong>Einstein arcs.</strong> The background starfield smears into arcs around the
+          shadow — same lensing Eddington first measured in 1919, just <Eq>{String.raw`10^{10}`}</Eq>{" "}
+          times stronger.
+        </li>
+      </ul>
 
       <Callout title="The honest version">
-        The demo's <em>particles</em> use Newtonian gravity with a hard cutoff at{" "}
-        <Eq>{String.raw`r_s`}</Eq> — visually correct and physically meaningful. The{" "}
-        <em>light</em> (lensing, photon ring) uses the real null geodesics above, because that's the
-        part your eye can tell is fake. Both layers are honest about what they are.
+        What's deliberately simplified: the disk is infinitely thin and opaque, its turbulence is a
+        procedural noise texture (not magnetohydrodynamics), the temperature profile is
+        Shakura–Sunyaev rather than the fully relativistic Novikov–Thorne flux, and the starfield
+        isn't redshifted. Everything about the <em>geometry and the light transport</em> — the
+        geodesics, the ISCO, the redshift factor, the beaming — is exact GR. Knowing precisely
+        where your simulation is exact and where it approximates is the difference between
+        simulating and decorating.
       </Callout>
 
-      <h2>What's in <em>your</em> sim: Newtonian is fine</h2>
+      <h2>7 · Equation → code</h2>
+      <p>The whole thing is one Python file. Every equation above has an address:</p>
+      <div className="not-prose my-4 overflow-x-auto rounded-md border border-white/10">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-panel/70 text-left text-ink/90">
+              <th className="px-3 py-2 font-semibold">Physics</th>
+              <th className="px-3 py-2 font-semibold">Function in <code>kerr_blackhole.py</code></th>
+            </tr>
+          </thead>
+          <tbody className="text-ink/80">
+            <tr className="border-t border-white/10"><td className="px-3 py-2">Kerr Hamiltonian + Hamilton's equations</td><td className="px-3 py-2"><code>geodesic_rhs</code></td></tr>
+            <tr className="border-t border-white/10"><td className="px-3 py-2">RK4 integrator</td><td className="px-3 py-2"><code>rk4_step</code></td></tr>
+            <tr className="border-t border-white/10"><td className="px-3 py-2">ZAMO tetrad → photon (E, L_z, p)</td><td className="px-3 py-2"><code>camera_ray</code></td></tr>
+            <tr className="border-t border-white/10"><td className="px-3 py-2">Bardeen ISCO</td><td className="px-3 py-2"><code>isco_radius</code></td></tr>
+            <tr className="border-t border-white/10"><td className="px-3 py-2">Redshift factor g, beaming g⁴, orbit Ω</td><td className="px-3 py-2"><code>shade_disk</code></td></tr>
+            <tr className="border-t border-white/10"><td className="px-3 py-2">Shakura–Sunyaev T(r)</td><td className="px-3 py-2"><code>disk_temperature</code></td></tr>
+            <tr className="border-t border-white/10"><td className="px-3 py-2">Blackbody → sRGB</td><td className="px-3 py-2"><code>blackbody_rgb</code></td></tr>
+            <tr className="border-t border-white/10"><td className="px-3 py-2">Physics self-tests</td><td className="px-3 py-2"><code>run_checks</code> (<code>--check</code>)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>8 · What to build yourself</h2>
       <p>
-        Using the workshop master prompt with a cosmic idea, you're building a Newtonian sim:
-      </p>
-      <Eq display>{String.raw`\vec{F} = -\frac{G\,m_1 m_2}{r^2}\,\hat{r}`}</Eq>
-      <p>
-        This was "wrong" for a century — it missed Mercury's orbit by 43 arcseconds per century, which
-        Einstein fixed in 1915. But compare the GR effective potential to Newton: the correction is the{" "}
-        <Eq>{String.raw`r_s/r`}</Eq> term, and outside <Eq>{String.raw`\sim 10\,r_s`}</Eq> it's a
-        percent-level nudge. So a Newtonian black hole sim is honest if you:
+        You don't need to reproduce all of this in the hackathon. There's an honest ladder, and
+        every rung makes a legitimate, beautiful sim:
       </p>
       <ul>
-        <li>Use inverse-square gravity; set a hole radius <Eq>{String.raw`r_s`}</Eq>; absorb + respawn anything that crosses it.</li>
-        <li>Don't allow stable orbits inside <Eq>{String.raw`3\,r_s`}</Eq> (the ISCO).</li>
-        <li>Color by speed or potential — hot blue inside, cool red outside. Real disks do exactly that.</li>
+        <li>
+          <strong>Level 1 — Newtonian.</strong>{" "}
+          <Eq>{String.raw`\vec F = -GMm\,\hat r/r^2`}</Eq> particles, a capture radius at{" "}
+          <Eq>{String.raw`r_s = 2M`}</Eq>, no stable orbits inside <Eq>{String.raw`6M`}</Eq>, color
+          by speed. Outside <Eq>{String.raw`\sim 10\,r_s`}</Eq> Newton is within a percent of GR —
+          say so, and your sim is honest. This is what the workshop master prompt builds.
+        </li>
+        <li>
+          <strong>Level 2 — one real geodesic.</strong> For a non-spinning hole, planar light rays
+          obey a single famous ODE: <Eq>{String.raw`u'' + u = \tfrac{3}{2} r_s u^2`}</Eq> with{" "}
+          <Eq>{String.raw`u = 1/r`}</Eq>. Integrate it per ray and you have real lensing in ~20
+          lines. Ask your AI to derive it before it codes it — that's the test of whether{" "}
+          <em>you</em> are driving.
+        </li>
+        <li>
+          <strong>Level 3 — what the demo does.</strong> Full Kerr Hamiltonian flow + relativistic
+          disk shading, as derived above. The complete recipe is on this page and annotated in the
+          download.
+        </li>
       </ul>
-      <p>
-        Add lensing and the photon ring as <em>shader passes</em> on top. They're graphics-level effects
-        riding on top of Newtonian particles — which is exactly what the demo does.
-      </p>
 
-      <Callout kind="check" title="Want to go full GR?">
-        Integrate the geodesic equation on the Schwarzschild metric, parametrized by affine parameter{" "}
-        <Eq>{String.raw`\lambda`}</Eq>. Reduce to the orbital plane, get two ODEs in{" "}
-        <Eq>{String.raw`(r, \varphi)`}</Eq>, solve with RK4. A weekend project, not a workshop. GRChombo
-        and the Einstein Toolkit are the real numerical-relativity packages — overkill for visualization.
+      <Callout kind="warn" title="The point of the demo">
+        Any of you could prompt an AI into producing "a black hole simulation." The difference
+        between decorative and real is knowing <em>which equations</em> must be in there, and{" "}
+        <em>how to check they're actually being solved</em> (conserved quantities, known exact
+        numbers like <Eq>{String.raw`3\sqrt3\,M`}</Eq> and the ISCO). That skill — specifying and
+        verifying — is exactly what makes you dangerous with AI tools instead of dependent on them.
       </Callout>
-
-      <h2>What to do with this</h2>
-      <ul>
-        <li>
-          <strong>Watch the demo run.</strong> The disk warping behind the hole is the lensing ODE. The
-          bright ring just outside the shadow is the photon sphere at <Eq>{String.raw`1.5\,r_s`}</Eq>.
-        </li>
-        <li>
-          <strong>Reproduce one feature.</strong> Easiest: the Keplerian disk with an ISCO cutoff.
-          Hardest: lensing.
-        </li>
-        <li>
-          <strong>Don't copy the demo's code.</strong> It's C++/OpenGL because that's what I had time
-          for. Your Python + Taichi version can be prettier in a fraction of the lines.
-        </li>
-      </ul>
 
       <div className="mt-10 flex flex-wrap gap-3">
         <Link href="/workshop" className="px-4 py-2 rounded-md bg-accent text-black font-semibold text-sm">

@@ -15,7 +15,7 @@ You will be given a physics concept. Your job: produce a single Python file that
 
 NON-NEGOTIABLE RULES
 
-1. Stack: Python 3.10, 3.11, or 3.12 + the 'taichi' library only (NumPy allowed for setup arrays). Do not use Python 3.13 — Taichi does not support it yet.
+1. Stack: Python 3.10, 3.11, or 3.12 + the 'taichi' library only (NumPy allowed for setup arrays). Do not use Python 3.13 or newer — Taichi does not support it yet.
 2. Always start the file with:
 
    import taichi as ti
@@ -171,7 +171,7 @@ export default async function WorkshopPage() {
       {/* The master prompt */}
       <h2>The master prompt</h2>
       <p>
-        Copy this. Paste it into Cursor chat. Then at the bottom — right after "build a project with the following
+        Copy this. Paste it into Antigravity's chat. Then at the bottom — right after "build a project with the following
         idea and concept:" — paste your chosen idea (see the gallery below).
       </p>
 
@@ -212,8 +212,8 @@ export default async function WorkshopPage() {
       {/* Iterate */}
       <h2>After the first version runs</h2>
       <p>
-        You'll get a window with your sim. It probably won't look perfect on the first try. That's fine. Open Cursor
-        chat again and tell it what you want to change. Examples:
+        You'll get a window with your sim. It probably won't look perfect on the first try. That's fine. Open
+        Antigravity's chat again and tell it what you want to change. Examples:
       </p>
       <ul>
         <li>"make the particles brighter and trail-like"</li>

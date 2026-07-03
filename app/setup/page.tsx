@@ -29,8 +29,9 @@ export default function SetupPage() {
           <a href="https://www.python.org/downloads/" target="_blank" rel="noreferrer">
             python.org/downloads
           </a>
-          . Click the big yellow button. <strong>You need Python 3.10, 3.11, or 3.12</strong>{" "}
-          (Taichi doesn't support 3.13 yet — if the button says 3.13, scroll down and grab 3.12).
+          . <strong>You need Python 3.10, 3.11, or 3.12</strong> — Taichi doesn't support anything
+          newer. The big yellow button gives you 3.13 or 3.14, so <strong>don't click it</strong>:
+          scroll down to "Looking for a specific release?" and grab the latest 3.12.
         </li>
         <li>
           Run the installer.
@@ -39,7 +40,7 @@ export default function SetupPage() {
               <strong>Windows:</strong> tick <strong>"Add python.exe to PATH"</strong> on the first screen. Then Install.
             </li>
             <li>
-              <strong>Mac:</strong> keep pressing <kbd className="kbd">Enter</kbd> through the prompts. Defaults are fine.
+              <strong>Mac:</strong> keep clicking <strong>Continue</strong> through the prompts. Defaults are fine.
             </li>
           </ul>
         </li>
@@ -142,12 +143,17 @@ export default function SetupPage() {
       <ol>
         <li>In Antigravity, open the terminal at the bottom (View → Terminal, or <kbd className="kbd">Ctrl</kbd>+<kbd className="kbd">`</kbd>).</li>
         <li>
-          Paste and run:
+          Run these two commands, one at a time (on Mac, type <code>python3</code> instead of{" "}
+          <code>python</code>):
           <div className="my-2">
-            <pre><code>python --version &amp;&amp; git --version</code></pre>
+            <pre><code>{`python --version
+git --version`}</code></pre>
           </div>
         </li>
-        <li>You should see two version lines.</li>
+        <li>
+          You should see two version lines — Python starting with <code>3.10</code>, <code>3.11</code>{" "}
+          or <code>3.12</code>, and any Git version.
+        </li>
         <li>
           Screenshot the terminal. Upload it on{" "}
           <Link href="/phase/1" className="text-accent">
@@ -173,6 +179,10 @@ export default function SetupPage() {
         </li>
         <li>
           <strong><code>git</code> command not found</strong> — reinstall Git; on Windows use the default options.
+        </li>
+        <li>
+          <strong><code>python --version</code> says 3.13 or 3.14</strong> — Taichi won't run on it. Go back to
+          step 1 and install 3.12 as well (it can sit next to the newer one).
         </li>
         <li>
           <strong>Terminal shows a red error</strong> — copy the error, paste it into Antigravity's chat, say

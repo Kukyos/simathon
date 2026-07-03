@@ -59,7 +59,7 @@ export default function HackathonPage() {
           },
           {
             t: "Physics accuracy",
-            d: "Real formulas, sensible constants. A physicist watching it should nod, not wince.",
+            d: "Real formulas, sensible constants, and honesty about what you approximated. A physicist watching it should nod, not wince.",
           },
         ].map((x) => (
           <div key={x.t} className="rounded-xl border border-white/10 bg-panel/60 p-4">
@@ -68,6 +68,11 @@ export default function HackathonPage() {
           </div>
         ))}
       </div>
+      <p className="text-sm text-ink/70 mt-3">
+        Not sure what "real physics" looks like in practice? The{" "}
+        <Link href="/blackhole" className="text-accent">demo's physics page</Link> shows exactly
+        where a sim can be exact, where it can approximate, and how to check the difference.
+      </p>
 
       {/* Prizes */}
       <h2>Prizes</h2>
