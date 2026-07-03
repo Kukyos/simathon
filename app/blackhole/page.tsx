@@ -1,5 +1,7 @@
+import "katex/dist/katex.min.css";
 import Link from "next/link";
 import { Callout } from "@/components/Callout";
+import { Eq } from "@/components/Eq";
 import { isWorkshopOpen, workshopStartAtIso } from "@/lib/lock";
 import LockedScreen from "@/components/LockedScreen";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -21,11 +23,13 @@ export default async function BlackHolePage() {
   return (
     <div className="prose-body max-w-3xl mx-auto">
       <div className="text-xs uppercase tracking-[0.2em] text-accent2">the demo</div>
-      <h1 className="text-3xl font-bold mt-1">What you're actually simulating</h1>
+      <h1 className="text-3xl font-bold mt-1">The math behind the black hole</h1>
       <p className="text-ink/85 mt-2 text-[15px]">
-        At the live event you'll watch a black hole simulation running on a real GPU. Then you'll build
-        your own. This page explains what's actually happening on screen — enough to bluff a physicist,
-        enough to remix into something better.
+        At the live event you'll watch a black hole simulation running on a real GPU, then build your
+        own. This page is the physics underneath every pixel — the actual equations the demo integrates,
+        not hand-waving. Everything here is a non-rotating (Schwarzschild) black hole. In geometric units
+        we set <Eq>{String.raw`G = c = 1`}</Eq>, so a mass <Eq>{String.raw`M`}</Eq> has a length: its
+        horizon.
       </p>
 
       <div className="mt-6 flex flex-wrap items-center gap-3 not-prose">
@@ -42,132 +46,177 @@ export default async function BlackHolePage() {
         </span>
       </div>
 
-      <Callout title="The honest version">
-        The workshop's job is to teach you to ship a sim that <em>looks</em> like a black hole. Mine
-        uses Newtonian gravity with a hard cutoff at the event horizon — that's enough to be visually
-        correct and physically meaningful. The cinematic features (lensing, photon sphere) are added
-        on top as shader tricks. If you want to do the real thing — null geodesics on a Schwarzschild
-        background — read on. Both are valid.
-      </Callout>
+      <h2>Start from the metric</h2>
+      <p>
+        A black hole isn't a force — it's geometry. All of it falls out of one line element, the{" "}
+        <strong>Schwarzschild solution</strong> to Einstein's field equations for the vacuum around a
+        spherical mass:
+      </p>
+      <Eq display>
+        {String.raw`ds^2 = -\left(1 - \frac{r_s}{r}\right)c^2\,dt^2 + \left(1 - \frac{r_s}{r}\right)^{-1} dr^2 + r^2\left(d\theta^2 + \sin^2\!\theta\, d\varphi^2\right)`}
+      </Eq>
+      <p>
+        Every feature below is this one object read at a different radius. The single scale in it is the{" "}
+        <strong>Schwarzschild radius</strong>, where the <Eq>{String.raw`dt^2`}</Eq> coefficient hits
+        zero:
+      </p>
+      <Eq display>{String.raw`r_s = \frac{2GM}{c^2}`}</Eq>
+      <p>
+        Sun-mass → 3 km. Earth-mass → 9 mm. Sagittarius A* → ~12 million km. Everything from here is
+        measured in units of <Eq>{String.raw`r_s`}</Eq>.
+      </p>
 
       <h2>The five things on screen</h2>
 
-      <h3>1. The singularity</h3>
+      <h3>1. The event horizon — <Eq>{String.raw`r = r_s`}</Eq></h3>
       <p>
-        Not a dot — a point where the equations break. In Einstein's theory, mass curves spacetime,
-        and inside a black hole the curvature goes to infinity at the center. We don't draw it. There
-        is nothing to draw. The thing you see in the middle is empty.
+        The dark sphere. Surface where escape velocity equals <Eq>{String.raw`c`}</Eq>. Set{" "}
+        <Eq>{String.raw`\tfrac12 v^2 = GM/r`}</Eq> with <Eq>{String.raw`v = c`}</Eq> and you recover{" "}
+        <Eq>{String.raw`r_s`}</Eq> exactly — a Newtonian coincidence that happens to give the right
+        answer. It's not a wall; it's the radius where every future-pointing path leads inward.
       </p>
 
-      <h3>2. The event horizon</h3>
+      <h3>2. The photon sphere — <Eq>{String.raw`r = \tfrac{3}{2}\,r_s`}</Eq></h3>
       <p>
-        The dark sphere. It's the surface where escape velocity equals the speed of light — meaning
-        nothing inside, not even light, gets out. For a non-rotating black hole of mass <em>M</em>,
-        its radius is the <strong>Schwarzschild radius</strong>:
+        Light bends around a null geodesic. Reduced to the orbital plane, a photon's path obeys
       </p>
-      <pre className="bg-panel/60 border border-white/10 rounded-md p-3 text-sm overflow-x-auto"><code>r_s = 2GM / c²</code></pre>
+      <Eq display>
+        {String.raw`\left(\frac{du}{d\varphi}\right)^2 = \frac{1}{b^2} - u^2\left(1 - r_s\,u\right), \qquad u \equiv \frac{1}{r}`}
+      </Eq>
       <p>
-        Sun-mass black hole → 3 km. Earth-mass → 9 mm. Sagittarius A* (the one at our galaxy's center)
-        → about 12 million km. The horizon isn't a physical surface. It's a boundary in spacetime: cross
-        it, and every future-pointing path leads to the singularity.
+        where <Eq>{String.raw`b`}</Eq> is the impact parameter. Circular photon orbits require{" "}
+        <Eq>{String.raw`du/d\varphi = 0`}</Eq> and <Eq>{String.raw`d^2u/d\varphi^2 = 0`}</Eq>, which
+        solve to
       </p>
-
-      <h3>3. The photon sphere</h3>
+      <Eq display>{String.raw`r_{\text{ph}} = \frac{3GM}{c^2} = \tfrac{3}{2}\,r_s`}</Eq>
       <p>
-        At <code>1.5 × r_s</code>, light can orbit the black hole in a circle. Just once, or many times,
-        before either escaping or falling in. This is what makes the black hole's silhouette look bigger
-        than its horizon — photons coming from behind it can curve around and reach your eye, painting a
-        bright ring. The dark disk in the famous Event Horizon Telescope image is roughly{" "}
-        <code>2.6 × r_s</code> wide because of this.
+        Light aimed inside the critical impact parameter <Eq>{String.raw`b_{\text{crit}} = \tfrac{3\sqrt3}{2}\,r_s \approx 2.6\,r_s`}</Eq>{" "}
+        falls in — that's why the black shadow looks bigger than the horizon. That number is the width of
+        the dark disk in the Event Horizon Telescope image.
       </p>
 
-      <h3>4. The accretion disk</h3>
+      <h3>3. The accretion disk — cut off at <Eq>{String.raw`r = 3\,r_s`}</Eq></h3>
       <p>
-        Gas spiraling inward. As it falls, friction heats it to millions of degrees — bright blue at the
-        inside edge, fading to red at the outside. The disk can't get arbitrarily close: stable circular
-        orbits stop at the <strong>ISCO</strong> (innermost stable circular orbit),{" "}
-        <code>3 × r_s</code> for a non-spinning black hole. Inside that radius, anything orbiting plunges
-        in within a few revolutions.
+        For a massive particle the radial motion has an effective potential. The first two terms are pure
+        Newton; the third is the GR correction that changes everything:
       </p>
+      <Eq display>
+        {String.raw`V_{\text{eff}}(r) = -\frac{GMm}{r} + \frac{L^2}{2mr^2} - \frac{GM\,L^2}{c^2\,m\,r^3}`}
+      </Eq>
       <p>
-        We render the disk as ~200k particles each on Keplerian orbits with the ISCO cutoff, colored by
-        a temperature curve. The light from each particle gets gravitationally redshifted and Doppler-shifted
-        based on its speed and position. That's why one side of the disk looks brighter than the other.
+        That <Eq>{String.raw`-1/r^3`}</Eq> term means the potential no longer has a stable minimum for
+        small <Eq>{String.raw`r`}</Eq>. Below the <strong>innermost stable circular orbit</strong> there
+        are no stable orbits at all — matter spirals in:
       </p>
-
-      <h3>5. The lensing</h3>
+      <Eq display>{String.raw`r_{\text{ISCO}} = \frac{6GM}{c^2} = 3\,r_s`}</Eq>
       <p>
-        Every background star behind the black hole gets warped around it. Light follows the curvature
-        of spacetime, which means rays bend smoothly toward the mass. Far from the hole the bending is
-        tiny (this is how Eddington proved Einstein right in 1919). Close to the photon sphere, the same
-        star can show up twice, or as a ring (an{" "}
-        <strong>Einstein ring</strong>) if it's exactly behind.
+        Outside the ISCO, disk particles ride circular <strong>Keplerian</strong> orbits:
       </p>
+      <Eq display>{String.raw`v(r) = \sqrt{\frac{GM}{r}}, \qquad \Omega(r) = \sqrt{\frac{GM}{r^3}}`}</Eq>
       <p>
-        In the demo this is a fragment shader. Each pixel computes the impact parameter of the light ray
-        from the camera, integrates it along the geodesic on a Schwarzschild background, and samples the
-        sky texture at the deflected angle. Pure ray tracing, no particles needed for this part.
+        Friction heats the gas; a thin disk radiates as a local blackbody with the Shakura–Sunyaev
+        profile — hot and blue at the inner edge, cool and red outside:
       </p>
-
-      <h2>Newtonian vs. relativistic — what's in your sim</h2>
-
+      <Eq display>
+        {String.raw`T(r) \propto \left(\frac{\dot{M}}{r^3}\right)^{1/4}\left(1 - \sqrt{\frac{r_{\text{in}}}{r}}\right)^{1/4}`}
+      </Eq>
       <p>
-        If you're using the workshop master prompt with one of the cosmic ideas, you're building a{" "}
-        <strong>Newtonian</strong> simulation:
+        We render ~200k particles on these orbits, colored by <Eq>{String.raw`T(r)`}</Eq>.
       </p>
 
-      <pre className="bg-panel/60 border border-white/10 rounded-md p-3 text-sm overflow-x-auto"><code>F = G * m1 * m2 / r²</code></pre>
-
+      <h3>4. Why one side is brighter — Doppler + redshift</h3>
       <p>
-        That formula was wrong for over a century — Mercury's orbit didn't match. Einstein fixed it in
-        1915 by replacing "force" with "curved geometry." But here's the thing: for everything outside
-        the photon sphere, the Newtonian answer is{" "}
-        <em>almost exactly right</em>. The relativistic corrections start mattering at maybe a few
-        percent for an orbit at <code>10 × r_s</code>, and only blow up close to the horizon.
+        The disk spins. The side rotating toward you is beamed brighter by the relativistic Doppler
+        factor; the whole thing is dimmed climbing out of the well. Observed intensity scales as
+      </p>
+      <Eq display>
+        {String.raw`\frac{I_{\text{obs}}}{I_{\text{emit}}} = \delta^{\,4}, \qquad \delta = \frac{1}{\gamma\left(1 - \beta\cos\theta\right)}`}
+      </Eq>
+      <p>
+        and light climbing out is gravitationally redshifted by
+      </p>
+      <Eq display>{String.raw`1 + z = \left(1 - \frac{r_s}{r}\right)^{-1/2}`}</Eq>
+      <p>
+        At the horizon <Eq>{String.raw`z \to \infty`}</Eq> — infalling light fades to black rather than
+        vanishing at a hard edge.
       </p>
 
-      <p>So a Newtonian black hole sim is honest if you:</p>
+      <h3>5. The lensing — bending starlight</h3>
+      <p>
+        Far from the hole, a light ray passing at impact parameter <Eq>{String.raw`b`}</Eq> is deflected
+        by
+      </p>
+      <Eq display>{String.raw`\alpha = \frac{4GM}{c^2 b} = \frac{2\,r_s}{b}`}</Eq>
+      <p>
+        That factor of 4 (twice the Newtonian prediction) is exactly what Eddington measured in 1919. A
+        star directly behind the hole smears into an <strong>Einstein ring</strong>. In the demo, the
+        lensing fragment shader integrates the photon equation from §2 per pixel and samples the sky
+        texture at the deflected angle.
+      </p>
+
+      <h2>The equation the demo actually integrates</h2>
+      <p>
+        Everything cinematic — lensing, the photon ring, the shadow edge — is one ODE. Photons follow
+        null geodesics of the metric:
+      </p>
+      <Eq display>
+        {String.raw`\frac{d^2 x^\mu}{d\lambda^2} + \Gamma^{\mu}_{\;\nu\rho}\,\frac{dx^\nu}{d\lambda}\,\frac{dx^\rho}{d\lambda} = 0`}
+      </Eq>
+      <p>
+        The <Eq>{String.raw`\Gamma^{\mu}_{\;\nu\rho}`}</Eq> (Christoffel symbols) come straight from the
+        Schwarzschild metric and are textbook. For a static spherical hole you reduce it to the 2D{" "}
+        <Eq>{String.raw`u(\varphi)`}</Eq> equation above and march it with RK4 — two ODEs per ray. That's
+        the whole "real GR" part. No Einstein Toolkit required.
+      </p>
+
+      <Callout title="The honest version">
+        The demo's <em>particles</em> use Newtonian gravity with a hard cutoff at{" "}
+        <Eq>{String.raw`r_s`}</Eq> — visually correct and physically meaningful. The{" "}
+        <em>light</em> (lensing, photon ring) uses the real null geodesics above, because that's the
+        part your eye can tell is fake. Both layers are honest about what they are.
+      </Callout>
+
+      <h2>What's in <em>your</em> sim: Newtonian is fine</h2>
+      <p>
+        Using the workshop master prompt with a cosmic idea, you're building a Newtonian sim:
+      </p>
+      <Eq display>{String.raw`\vec{F} = -\frac{G\,m_1 m_2}{r^2}\,\hat{r}`}</Eq>
+      <p>
+        This was "wrong" for a century — it missed Mercury's orbit by 43 arcseconds per century, which
+        Einstein fixed in 1915. But compare the GR effective potential to Newton: the correction is the{" "}
+        <Eq>{String.raw`r_s/r`}</Eq> term, and outside <Eq>{String.raw`\sim 10\,r_s`}</Eq> it's a
+        percent-level nudge. So a Newtonian black hole sim is honest if you:
+      </p>
       <ul>
-        <li>
-          Use inverse-square gravity and set a "hole" radius. Anything inside it gets absorbed (replace
-          with a respawn).
-        </li>
-        <li>Don't pretend particles can sit on stable orbits closer than ~3× the horizon radius.</li>
-        <li>
-          Color by speed or potential energy. Hot blue inside, cool red outside is real — accretion
-          disks really do that.
-        </li>
+        <li>Use inverse-square gravity; set a hole radius <Eq>{String.raw`r_s`}</Eq>; absorb + respawn anything that crosses it.</li>
+        <li>Don't allow stable orbits inside <Eq>{String.raw`3\,r_s`}</Eq> (the ISCO).</li>
+        <li>Color by speed or potential — hot blue inside, cool red outside. Real disks do exactly that.</li>
       </ul>
-
       <p>
-        You don't need the full GR machinery to make something cinematically true. You need it if you
-        want to show <em>lensing</em>, <em>frame dragging</em>, or accurate <em>photon orbits</em>.
-        Those are graphics-level effects more than physics-level — you can add them as shader passes
-        on top of a Newtonian particle sim. Which is exactly what the demo does.
+        Add lensing and the photon ring as <em>shader passes</em> on top. They're graphics-level effects
+        riding on top of Newtonian particles — which is exactly what the demo does.
       </p>
 
-      <Callout kind="check" title="For the curious">
-        If you want to do real numerical GR: integrate the geodesic equation{" "}
-        <code>d²xᵘ/dλ² + Γᵘ_νρ (dxᵛ/dλ)(dxᵖ/dλ) = 0</code> on a Schwarzschild metric, parametrized by
-        affine parameter λ. The Christoffel symbols are textbook. For a static spherical black hole
-        you can reduce it to a 2D problem in the orbital plane and integrate two ODEs (r and φ vs. λ)
-        with RK4. That's a weekend project, not a workshop. The Einstein Toolkit / GRChombo are
-        full numerical-relativity packages; you don't need them for visualization.
+      <Callout kind="check" title="Want to go full GR?">
+        Integrate the geodesic equation on the Schwarzschild metric, parametrized by affine parameter{" "}
+        <Eq>{String.raw`\lambda`}</Eq>. Reduce to the orbital plane, get two ODEs in{" "}
+        <Eq>{String.raw`(r, \varphi)`}</Eq>, solve with RK4. A weekend project, not a workshop. GRChombo
+        and the Einstein Toolkit are the real numerical-relativity packages — overkill for visualization.
       </Callout>
 
       <h2>What to do with this</h2>
       <ul>
         <li>
-          <strong>Watch the demo run.</strong> Notice the disk warping behind the hole. That's lensing.
-          Notice the ring just outside the horizon. That's the photon sphere edge.
+          <strong>Watch the demo run.</strong> The disk warping behind the hole is the lensing ODE. The
+          bright ring just outside the shadow is the photon sphere at <Eq>{String.raw`1.5\,r_s`}</Eq>.
         </li>
         <li>
-          <strong>Try to reproduce one feature.</strong> The accretion disk is the easiest target —
-          particles on Keplerian orbits with an ISCO cutoff. Lensing is the hardest.
+          <strong>Reproduce one feature.</strong> Easiest: the Keplerian disk with an ISCO cutoff.
+          Hardest: lensing.
         </li>
         <li>
-          <strong>Don't copy the demo's code.</strong> It's C++ + OpenGL because that's what I had time
-          to write. Your version in Python + Taichi can be more beautiful with a fraction of the code.
+          <strong>Don't copy the demo's code.</strong> It's C++/OpenGL because that's what I had time
+          for. Your Python + Taichi version can be prettier in a fraction of the lines.
         </li>
       </ul>
 

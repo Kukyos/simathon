@@ -3,16 +3,14 @@ import Link from "next/link";
 
 export const metadata = { title: "Hackathon · Simathon" };
 
-const TBD = <span className="text-accent2 font-mono text-sm">[[TBD]]</span>;
-
 export default function HackathonPage() {
   return (
     <div className="prose-body max-w-3xl mx-auto">
       <div className="text-xs uppercase tracking-[0.2em] text-accent2">03 · the hackathon</div>
       <h1 className="text-3xl font-bold mt-1">Hackathon rules</h1>
       <p className="text-ink/80 mt-2 text-[15px]">
-        The workshop hands you the tools. The hackathon is what you do with them. Most logistics below are still
-        being decided — anything you see as {TBD} will be confirmed by email before the build week starts.
+        The workshop hands you the tools. The hackathon is what you do with them. One evening to learn it,
+        a week to build, one deadline. Everything you need is below.
       </p>
 
       {/* Theme */}
@@ -32,16 +30,17 @@ export default function HackathonPage() {
       <h2>Timeline</h2>
       <ul>
         <li>
-          <strong>Workshop day</strong> · {TBD} · we cover the tools and the prompt together.
+          <strong>Workshop day</strong> · Sunday, July 5, 6 PM IST · we cover the tools and the prompt together.
         </li>
         <li>
-          <strong>Build week</strong> · {TBD} · you build your sim. Chat is live the whole time.
+          <strong>Build week</strong> · July 6–12 · you build your sim. Chat is live the whole time.
         </li>
         <li>
-          <strong>Submission deadline</strong> · {TBD}.
+          <strong>Submission deadline</strong> · Sunday, July 12, 11:59 PM IST.
         </li>
         <li>
-          <strong>Judging day</strong> · {TBD} · everyone screen-shares. Winners announced live.
+          <strong>Results</strong> · winners announced on the group WhatsApp, and posted here on the site the
+          next day. No live call, no screen-sharing — your video does the talking.
         </li>
       </ul>
 
@@ -69,23 +68,6 @@ export default function HackathonPage() {
           </div>
         ))}
       </div>
-
-      <h3>Who judges</h3>
-      <ul>
-        <li>
-          <a
-            href="https://www.linkedin.com/in/armaansucks/"
-            target="_blank"
-            rel="noreferrer"
-            className="text-ink underline underline-offset-2 hover:text-accent"
-          >
-            Armaan
-          </a>{" "}
-          (workshop lead).
-        </li>
-        <li>Guest judges: {TBD}.</li>
-        <li>Audience vote: {TBD} weight.</li>
-      </ul>
 
       {/* Prizes */}
       <h2>Prizes</h2>
