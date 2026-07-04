@@ -183,6 +183,19 @@ export default async function WorkshopPage() {
         error message back into chat and say "fix this." Don't start over from a different prompt.
       </Callout>
 
+      {/* The interview prompt */}
+      <h2>The vocabulary cheat code: make an AI interview you</h2>
+      <p>
+        The better your words, the better your sim. But you can't learn a whole field before you build, so cheat:
+        before you start, take this to ChatGPT (or Claude, or any chatbot) and let it build the vocabulary for you.
+        It asks the questions, you stay the director, and it hands you a precise prompt at the end.
+      </p>
+      <Code language="prompt">{`I'm about to ask an AI coding agent to build a [YOUR IDEA] simulation in Python with Taichi. My machine: [GPU model, or "no dedicated GPU"]. Don't write the prompt yet. First, ask me questions, one at a time, about what I want to see and how I want to interact with it. Offer me the technical terms for the things I describe, so I learn the vocabulary as we go. When we're done, write me one detailed prompt in plain English.`}</Code>
+      <Callout kind="warn" title="Write the prompt there, build the sim here">
+        Chatbots in a browser can't run code, see your errors, or iterate. Use them to draft the prompt,
+        then paste the result into Antigravity's agent and build there.
+      </Callout>
+
       {/* The ideas */}
       <h2 id="ideas">Idea gallery: pick one (or write your own)</h2>
       <p>
