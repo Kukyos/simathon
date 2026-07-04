@@ -49,7 +49,7 @@ export default function SetupPage() {
         </li>
       </ol>
 
-      <MediaSlot src="/guide/python.png" caption="screenshot: python installer with 'Add to PATH' ticked" />
+      <MediaSlot src="/guide/python.png" caption="screenshot: the 3.12 row to download on python.org (not the big button)" />
 
       <Callout kind="warn" title="The PATH checkbox matters (Windows only)">
         If you missed it, run the installer again and tick it. Otherwise Antigravity's terminal won't find Python.
