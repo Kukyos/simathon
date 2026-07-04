@@ -14,6 +14,16 @@ type Message = {
 
 const RATE_LIMIT_MS = 5000;
 
+// ponytail: replies are a quote line baked into the message text ("> name: snippet"),
+// no DB column, no migration. Upgrade to a reply_to_id column if threads ever matter.
+const QUOTE_RE = /^> (.{1,200}?): (.*)\n/;
+
+function splitQuote(content: string): { quote: { name: string; text: string } | null; body: string } {
+  const m = content.match(QUOTE_RE);
+  if (!m) return { quote: null, body: content };
+  return { quote: { name: m[1], text: m[2] }, body: content.slice(m[0].length) };
+}
+
 export default function ChatRoom({
   userEmail,
   displayName,
@@ -29,6 +39,8 @@ export default function ChatRoom({
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
+  const [replyTo, setReplyTo] = useState<{ name: string; text: string } | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
@@ -95,8 +107,9 @@ export default function ChatRoom({
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
-    const content = input.trim();
-    if (!content) return;
+    const body = input.trim();
+    if (!body) return;
+    const content = replyTo ? `> ${replyTo.name}: ${replyTo.text}\n${body}` : body;
 
     if (!isAdmin) {
       const since = Date.now() - lastSentRef.current;
@@ -126,7 +139,7 @@ export default function ChatRoom({
     setSending(false);
 
     if (error || !inserted) {
-      setInput(content);
+      setInput(body);
       console.error("[chat] insert failed:", error);
       setErr(
         error?.message?.includes("chat_locked")
@@ -138,6 +151,7 @@ export default function ChatRoom({
 
     // Append immediately (realtime echo will be deduped by id).
     setMessages((m) => (m.some((x) => x.id === inserted.id) ? m : [...m, inserted as Message]));
+    setReplyTo(null);
     if (!isAdmin) {
       lastSentRef.current = Date.now();
       setCooldown(RATE_LIMIT_MS);
@@ -182,16 +196,31 @@ export default function ChatRoom({
         )}
         {messages.map((m) => {
           const mine = m.user_email.toLowerCase() === userEmail;
+          const { quote, body } = splitQuote(m.content);
+          const startReply = () => {
+            setReplyTo({
+              name: m.display_name || m.user_email.split("@")[0],
+              text: body.length > 90 ? body.slice(0, 90) + "…" : body,
+            });
+            inputRef.current?.focus();
+          };
           return (
             <div key={m.id} className={`group flex items-start gap-2 ${mine ? "justify-end" : "justify-start"}`}>
-              {isAdmin && mine && (
-                <button
-                  onClick={() => deleteOne(m.id)}
-                  className="opacity-0 group-hover:opacity-100 transition text-xs text-red-300 hover:text-red-200 mt-2"
-                  title="delete"
-                >
-                  ✕
-                </button>
+              {mine && (
+                <div className="opacity-0 group-hover:opacity-100 transition flex gap-2 mt-2">
+                  {isAdmin && (
+                    <button
+                      onClick={() => deleteOne(m.id)}
+                      className="text-xs text-red-300 hover:text-red-200"
+                      title="delete"
+                    >
+                      ✕
+                    </button>
+                  )}
+                  <button onClick={startReply} className="text-xs text-muted hover:text-accent" title="reply">
+                    ↩
+                  </button>
+                </div>
               )}
               <div
                 className={`max-w-[80%] rounded-lg px-3 py-2 ${
@@ -219,16 +248,28 @@ export default function ChatRoom({
                     })}
                   </span>
                 </div>
-                <div className="text-sm whitespace-pre-wrap break-words">{m.content}</div>
+                {quote && (
+                  <div className="mb-1 rounded border-l-2 border-accent/50 bg-black/20 px-2 py-1 text-xs text-ink/60">
+                    <span className="font-semibold text-ink/75">{quote.name}</span> {quote.text}
+                  </div>
+                )}
+                <div className="text-sm whitespace-pre-wrap break-words">{body}</div>
               </div>
-              {isAdmin && !mine && (
-                <button
-                  onClick={() => deleteOne(m.id)}
-                  className="opacity-0 group-hover:opacity-100 transition text-xs text-red-300 hover:text-red-200 mt-2"
-                  title="delete"
-                >
-                  ✕
-                </button>
+              {!mine && (
+                <div className="opacity-0 group-hover:opacity-100 transition flex gap-2 mt-2">
+                  <button onClick={startReply} className="text-xs text-muted hover:text-accent" title="reply">
+                    ↩
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => deleteOne(m.id)}
+                      className="text-xs text-red-300 hover:text-red-200"
+                      title="delete"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           );
@@ -239,8 +280,20 @@ export default function ChatRoom({
           🔒 Chat is locked by the admins right now. You can still read along.
         </div>
       ) : (
-      <form onSubmit={send} className="border-t border-white/10 p-3 flex gap-2 items-center">
+      <div className="border-t border-white/10">
+      {replyTo && (
+        <div className="px-3 pt-2 flex items-center gap-2 text-xs text-ink/70">
+          <span className="border-l-2 border-accent/50 pl-2">
+            replying to <span className="font-semibold">{replyTo.name}</span>: {replyTo.text}
+          </span>
+          <button onClick={() => setReplyTo(null)} className="text-muted hover:text-red-300" title="cancel reply">
+            ✕
+          </button>
+        </div>
+      )}
+      <form onSubmit={send} className="p-3 flex gap-2 items-center">
         <input
+          ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={cooldown > 0 ? `wait ${Math.ceil(cooldown / 1000)}s…` : "ask anything…"}
@@ -256,6 +309,7 @@ export default function ChatRoom({
           {cooldown > 0 ? `${Math.ceil(cooldown / 1000)}s` : "send"}
         </button>
       </form>
+      </div>
       )}
       {err && (
         <div className="mx-3 mb-3 rounded-md border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">

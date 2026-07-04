@@ -149,6 +149,17 @@ git config --global user.email "you@example.com"`}</code></pre>
 
       <MediaSlot kind="video" src="https://youtu.be/o4IQF9WWa8M" caption="watch: install antigravity + first sign-in" />
 
+      <Callout kind="warn" title='Antigravity says "Account ineligible"?'>
+        Some Google accounts (usually school-managed ones) get blocked from Antigravity. Not your fault,
+        and easy to route around: first try a different Gmail (a personal one, or make a fresh one in two
+        minutes). If no Gmail works, use <strong>VS Code + GitHub Copilot</strong> instead — it's the same
+        editor Antigravity is built on, with the same kind of AI agent. Download VS Code from{" "}
+        <a href="https://code.visualstudio.com/" target="_blank" rel="noreferrer">code.visualstudio.com</a>,
+        click the Copilot icon at the top, and sign in with the GitHub account you made in step 3. The free
+        plan is enough for the workshop. Open the chat panel, pick <strong>Agent</strong> mode, and every
+        prompt on this site works the same there.
+      </Callout>
+
       <Callout kind="warn" title="Save your model limit for when it counts">
         One thing worth knowing before you start: Antigravity's AI agent can run on several different models,
         and each one has a usage limit. The big, smart models (the ones marked "Pro" or "High") have the
