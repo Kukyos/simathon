@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 >
                   Armaan
                 </a>{" "}
-                · part of physicssim
+                · a YPAE Club event
               </div>
               <div>
                 stuck?{" "}

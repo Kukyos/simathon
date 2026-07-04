@@ -30,10 +30,11 @@ export default function SetupPage() {
           <a href="https://www.python.org/downloads/" target="_blank" rel="noreferrer">
             python.org/downloads
           </a>
-          . <strong>You need Python 3.10, 3.11, or 3.12</strong> because Taichi (the graphics library
-          we use) doesn't support anything newer yet. Heads up: the big yellow button gives you 3.13
-          or 3.14, so skip it. Scroll down to "Looking for a specific release?" and grab the latest 3.12
-          instead.
+          . <strong>Install Python 3.12 — not the newest one.</strong> Taichi (the graphics library
+          we use) only works on Python 3.10, 3.11, or 3.12, and the big yellow download button gives
+          you 3.13 or 3.14, which won't work. Instead, scroll down to{" "}
+          <strong>"Looking for a specific release?"</strong>, click the newest version that starts
+          with <strong>3.12</strong>, and download the installer for your OS from that page.
         </li>
         <li>
           Run the installer.
@@ -76,9 +77,23 @@ export default function SetupPage() {
         </li>
       </ol>
 
+      <p>
+        <strong>One last thing: tell Git who you are.</strong> Every upload to GitHub gets stamped with a
+        name and email, and Git refuses to work until you've set them. Open a fresh terminal (on Windows,
+        search "Git Bash" or "PowerShell" in the Start menu; on Mac, Terminal) and run these two commands,
+        with your own name and the <strong>same email you'll use for GitHub</strong>:
+      </p>
+      <pre><code>{`git config --global user.name "Your Name"
+git config --global user.email "you@example.com"`}</code></pre>
+      <p>
+        Keep the quotes, swap in your details. No output means it worked. This is a one-time thing per
+        laptop — you never have to do it again.
+      </p>
+
       <Callout kind="check" title="Check Git installed">
-        Open a fresh terminal window and type <code>git --version</code>. You should see a line like{" "}
-        <code>git version 2.xx.x</code>. If it says "command not found", reinstall and let the installer add Git to PATH.
+        In that same terminal, type <code>git --version</code>. You should see a line like{" "}
+        <code>git version 2.xx.x</code>. If it says "command not found", reinstall and let the installer
+        add Git to PATH. Then type <code>git config user.email</code> — it should echo your email back.
       </Callout>
 
       <MediaSlot kind="video" src="https://youtu.be/xdN3YxmbSO8" caption="watch: installing git in under 2 minutes" />
@@ -191,6 +206,10 @@ git --version`}</code></pre>
         </li>
         <li>
           <strong><code>git</code> command not found:</strong> reinstall Git; on Windows use the default options.
+        </li>
+        <li>
+          <strong>Git says "Author identity unknown" or "please tell me who you are":</strong> you skipped
+          the two <code>git config</code> commands in step 2. Run them and try again.
         </li>
         <li>
           <strong><code>python --version</code> says 3.13 or 3.14:</strong> Taichi won't run on it. Go back to
