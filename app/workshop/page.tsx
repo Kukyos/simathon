@@ -146,7 +146,7 @@ export default async function WorkshopPage() {
         twice in a row). Your model limit is your fuel for the evening, so spend it where it matters.
       </Callout>
 
-      <MediaSlot kind="video" caption="watch: full workshop loop — paste prompt, hit run, keep clicking accept" />
+      <MediaSlot kind="video" src="https://youtu.be/7yYcD55QgGY" caption="watch: full workshop loop — paste prompt, hit run, keep clicking accept" />
 
       {/* The interview prompt */}
       <h2>Step 1 · The vocabulary cheat code: make an AI interview you</h2>
