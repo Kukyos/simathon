@@ -9,64 +9,43 @@ import { isAdmin as checkIsAdmin } from "@/lib/admin";
 
 export const metadata = { title: "Build · Simathon" };
 
-const MASTER_PROMPT = `You are an expert Python + Taichi developer building cinematic physics simulations.
+const MASTER_PROMPT = `You are a world-class creative coder and physics simulation artist working in Python + Taichi. I will give you a physics concept at the end of this message. Build me the most stunning, cinematic, interactive simulation of it that you possibly can.
 
-You will be given a physics concept. Your job: produce a single Python file that simulates it, opens a window, and renders it beautifully. The user will run it as 'python sim.py' and expects something visually impressive to appear within seconds.
+THE GOAL
 
-NON-NEGOTIABLE RULES
+Something that makes people go "whoa" within five seconds of the window opening. Dense fields of glowing particles, real equations driving every motion, color that carries physical meaning. A screensaver from the future, powered by actual physics. Do not build the minimum version of my idea. Build the version you would show off. If you can think of a detail that would make it more beautiful, more physical, or more fun to play with, add it without asking me.
 
-1. Stack: Python 3.10, 3.11, or 3.12 + the 'taichi' library only (NumPy allowed for setup arrays). Do not use Python 3.13 or newer — Taichi does not support it yet.
-2. Always start the file with:
+MAKE IT YOURS
+
+- You choose the particle count, the palette, the composition. Push it as far as the hardware allows while staying smooth (30+ fps).
+- Make it interactive: mouse to spawn or pull particles, SPACE to pause, keys to speed up and slow down time, R to reset. Print the controls to the console at startup so I know them.
+- Use the real formulas (real gravity, real fields, real springs), then tune the constants until it looks incredible on screen. Name every constant clearly and comment what it means, so a physics student can read it.
+- If my concept has a famous emergent phenomenon (spiral arms, tidal tails, resonance gaps, chaos), make sure it visibly shows up. That is the payoff.
+- Extra render layers are welcome: a glowing central mass, an event horizon ring, faint field lines, particle trails, whatever serves the concept.
+
+TECHNICAL GUARDRAILS (these prevent crashes, follow them exactly)
+
+1. One single Python file, sim.py. Taichi for all simulation and rendering (NumPy allowed for setup). Taichi only supports Python 3.10 to 3.12. If the system Python is 3.13 or newer, do not fight it: run the file with "uv run --python 3.12 --with taichi sim.py" instead of plain python.
+2. Start the file with:
 
    import taichi as ti
    try:
        ti.init(arch=ti.gpu)
    except Exception:
        ti.init(arch=ti.cpu)
+       print("Running on CPU, expect lower FPS. Lower the particle count if it crawls.")
 
-3. Use Taichi fields (ti.Vector.field, ti.field) for all per-particle state. Never store particle state in Python lists.
-4. All physics updates happen inside @ti.kernel functions so they run on GPU.
-5. Render with ti.ui.Window at 1280x800 minimum. Use canvas.circles or canvas.lines.
-6. Use semi-implicit Euler integration: update velocity from forces first, THEN position from velocity. This is stable.
-7. Avoid division by zero. Every distance computation must add a small epsilon (e.g. + 1e-3) before the sqrt or divide.
-8. The simulation must keep running indefinitely. If particles fall off or get absorbed, respawn them at a sensible location so the visual stays alive.
+3. All per-particle state lives in Taichi fields (ti.Vector.field / ti.field). All physics updates happen inside @ti.kernel functions. Never store or update particles with Python lists or loops.
+4. Semi-implicit Euler integration: update velocity from forces first, THEN position from velocity. This keeps orbits stable.
+5. Add a small epsilon (around 1e-3) inside every distance, sqrt, and divide so nothing ever divides by zero.
+6. The show never stops. If particles get absorbed or fly off screen, respawn them somewhere sensible so the screen stays alive forever.
+7. Render with ti.ui.Window at 1280x800 or larger, per-vertex colors (never one flat color), near-black background so the colors pop.
 
-PHYSICS ACCURACY
+WORKFLOW
 
-- Use real formulas. F = G*m1*m2/r^2 for gravity. F = q*v×B for magnetic. Hooke's law for springs. Etc.
-- Pick units that look right on screen (e.g. scale G so orbits actually orbit instead of flying off). Hardcode them as constants at the top of the file — a physicist should be able to recognize what each constant means and tune it.
-- Comment every physics constant with what it represents in SI-equivalent terms.
+Create the file, run it, and fix any errors yourself until the window opens and looks right. (If you cannot run code, output the complete file and I will run it.) After I see it, I will tell you what to change.
 
-CINEMATIC QUALITY
-
-- At least 2000 particles. More if it still hits 30+ fps.
-- Particles must be small and dense: radius around 0.002–0.004 in normalized canvas coordinates.
-- Use a per_vertex_color field, never flat color. Color particles by a physically meaningful scalar:
-  * speed → blue (slow) to white (fast) to orange (very fast)
-  * energy → deep red (low) to bright yellow (high)
-  * distance → choose what looks right
-- Background must be near-black (e.g. (0.01, 0.01, 0.03)) so colors pop.
-- If the concept allows: draw a central mass, an event horizon, a magnetic field outline, axis markers, etc. as additional render layers.
-
-CODE STRUCTURE
-
-- One single .py file.
-- Top docstring (3–5 lines) explaining what the simulation depicts.
-- Constants block right after the imports, labeled clearly.
-- @ti.func and @ti.kernel functions in the middle.
-- Main loop at the bottom inside 'if __name__ == "__main__":'.
-- Comments explaining the physics in plain language (the user might be a physics student who doesn't read code well).
-
-ERROR HANDLING
-
-- Wrap window creation in try/except and print a clear message if it fails.
-- If the GPU init fails and we fall back to CPU, print a one-line warning telling the user FPS will be lower.
-
-OUTPUT
-
-Just the code. No explanation around it. The user will paste it into a file called sim.py and run it.
-
-Remembering all of these instructions, build a project with the following idea and concept:
+My idea:
 
 `;
 
@@ -150,7 +129,7 @@ export default async function WorkshopPage() {
           expensive ones for when you're stuck.
         </li>
         <li>
-          Paste the master prompt below, then your chosen idea right after the last line. Hit Enter. Then just{" "}
+          Paste the builder prompt below, with your idea after the last line ("My idea:"). Hit Enter. Then just{" "}
           <strong>keep clicking the green buttons</strong> Antigravity shows (Run, Accept, Allow, Keep). Let the
           agent do its job. You don't need to read every line of code it writes.
         </li>
@@ -169,31 +148,38 @@ export default async function WorkshopPage() {
 
       <MediaSlot kind="video" caption="watch: full workshop loop — paste prompt, hit run, keep clicking accept" />
 
-      {/* The master prompt */}
-      <h2>The master prompt</h2>
+      {/* The interview prompt */}
+      <h2>Step 1 · The vocabulary cheat code: make an AI interview you</h2>
       <p>
-        Copy this. Paste it into Antigravity's chat. Then at the bottom, right after "build a project with the following
-        idea and concept:", paste your chosen idea (see the gallery below).
+        The better your words, the better your sim. But you can't learn a whole field before you build, so cheat:
+        before you touch Antigravity, take this to ChatGPT (or Claude, or any chatbot) and let it build the
+        vocabulary for you. It asks the questions, you stay the director, and at the end it hands you a rich
+        description of exactly what you want. That description is what you'll feed the builder prompt below.
+      </p>
+      <Code language="prompt">{`I'm about to ask an AI coding agent to build a [YOUR IDEA] simulation in Python with Taichi. My machine: [GPU model, or "no dedicated GPU"]. Don't write anything yet. First, interview me: ask questions one at a time about what I want to see, how it should move, and how I want to interact with it. Offer me the correct technical terms for the things I describe, so I learn the vocabulary as we go. When we're done, write one vivid, detailed paragraph describing my dream simulation, ready to paste into a coding agent.`}</Code>
+      <Callout kind="warn" title="Interview there, build here">
+        Chatbots in a browser can't run code, see your errors, or iterate. Use them for the interview,
+        then bring the paragraph they write back to Antigravity and build with the prompt below.
+      </Callout>
+      <p className="text-ink/70 text-sm">
+        In a hurry, or already know what you want? Skip the interview. Grab an idea from the gallery below and
+        go straight to the builder prompt.
+      </p>
+
+      {/* The master prompt */}
+      <h2>Step 2 · The builder prompt</h2>
+      <p>
+        Copy this whole thing into Antigravity's chat. At the bottom, after "My idea:", paste the paragraph from
+        your interview, or an idea card from the gallery below, or your own wild concept in your own words.
+        Then hit Enter and let it cook.
       </p>
 
       <Code language="prompt">{MASTER_PROMPT}</Code>
 
-      <Callout kind="warn" title="Don't paraphrase it">
-        The rules in this prompt exist because they prevent specific bugs. If the AI's output doesn't run, copy the
-        error message back into chat and say "fix this." Don't start over from a different prompt.
-      </Callout>
-
-      {/* The interview prompt */}
-      <h2>The vocabulary cheat code: make an AI interview you</h2>
-      <p>
-        The better your words, the better your sim. But you can't learn a whole field before you build, so cheat:
-        before you start, take this to ChatGPT (or Claude, or any chatbot) and let it build the vocabulary for you.
-        It asks the questions, you stay the director, and it hands you a precise prompt at the end.
-      </p>
-      <Code language="prompt">{`I'm about to ask an AI coding agent to build a [YOUR IDEA] simulation in Python with Taichi. My machine: [GPU model, or "no dedicated GPU"]. Don't write the prompt yet. First, ask me questions, one at a time, about what I want to see and how I want to interact with it. Offer me the technical terms for the things I describe, so I learn the vocabulary as we go. When we're done, write me one detailed prompt in plain English.`}</Code>
-      <Callout kind="warn" title="Write the prompt there, build the sim here">
-        Chatbots in a browser can't run code, see your errors, or iterate. Use them to draft the prompt,
-        then paste the result into Antigravity's agent and build there.
+      <Callout kind="warn" title="Keep the guardrails">
+        The technical guardrails in this prompt prevent specific crashes we've hit before. Dream as big as you
+        want in the idea part, but don't trim the guardrails. If the output doesn't run, copy the error message
+        back into chat and say "fix this." Don't start over from a different prompt.
       </Callout>
 
       {/* The ideas */}
