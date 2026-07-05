@@ -32,9 +32,12 @@ export default function SetupPage() {
           </a>
           . <strong>Install Python 3.12 — not the newest one.</strong> Taichi (the graphics library
           we use) only works on Python 3.10, 3.11, or 3.12, and the big yellow download button gives
-          you 3.13 or 3.14, which won't work. Instead, scroll down to{" "}
-          <strong>"Looking for a specific release?"</strong>, click the newest version that starts
-          with <strong>3.12</strong>, and download the installer for your OS from that page.
+          you 3.13 or 3.14, which won't work with it directly. Grab the installer from the{" "}
+          <a href="https://www.python.org/downloads/release/python-31210/" target="_blank" rel="noreferrer">
+            Python 3.12.10 release page
+          </a>{" "}
+          — scroll to the bottom and pick the installer for your OS (Windows 64-bit or macOS). Newer
+          3.12 pages don't have installers anymore, so use that exact link.
         </li>
         <li>
           Run the installer.
@@ -49,10 +52,22 @@ export default function SetupPage() {
         </li>
       </ol>
 
-      <MediaSlot src="/guide/python.png" caption="screenshot: the 3.12 row to download on python.org (not the big button)" />
+      <MediaSlot src="/guide/python.png" caption="screenshot: the python.org downloads page" />
 
       <Callout kind="warn" title="The PATH checkbox matters (Windows only)">
         If you missed it, run the installer again and tick it. Otherwise Antigravity's terminal won't find Python.
+      </Callout>
+
+      <Callout title="Already installed Python 3.13 or 3.14? You're fine — don't reinstall.">
+        There's a one-command fix. Open a terminal and run <code>pip install uv</code> (on Mac:{" "}
+        <code>pip3 install uv</code>). That installs a tool called <strong>uv</strong> which can fetch
+        its own private copy of Python 3.12 whenever a program needs one — your 3.14 stays untouched.
+        Then, during the workshop, run your sim with{" "}
+        <code>uv run --python 3.12 --with taichi main.py</code> instead of <code>python main.py</code>.
+        Even easier: just tell the AI agent{" "}
+        <em>"run this with uv using Python 3.12 and taichi, my system Python is 3.14"</em> and it
+        handles the rest. The first run downloads Python 3.12 in the background (about 30 seconds),
+        after that it's instant.
       </Callout>
 
       {/* Step 2 */}
@@ -188,8 +203,9 @@ git --version`}</code></pre>
           </div>
         </li>
         <li>
-          You should see two version lines: Python starting with <code>3.10</code>, <code>3.11</code>{" "}
-          or <code>3.12</code>, and any Git version.
+          You should see two version lines: any Python <code>3.10</code> or newer, and any Git
+          version. (If your Python is 3.13 or 3.14, just make sure you did the <code>pip install uv</code>{" "}
+          step from the callout in step 1 — that's your Taichi ticket.)
         </li>
         <li>
           Screenshot the terminal. Upload it on{" "}
@@ -205,6 +221,8 @@ git --version`}</code></pre>
       <Callout kind="check" title="About Taichi">
         You don't install Taichi now. When we start vibecoding during the workshop, Antigravity's agent will run{" "}
         <code>pip install taichi</code> in your project's terminal on its own. One less thing to worry about.
+        (On Python 3.13/3.14 that install will fail — that's expected, it's what the uv trick from step 1 is
+        for. Just tell the agent to use uv and carry on.)
       </Callout>
 
       {/* Stuck */}
@@ -223,8 +241,10 @@ git --version`}</code></pre>
           the two <code>git config</code> commands in step 2. Run them and try again.
         </li>
         <li>
-          <strong><code>python --version</code> says 3.13 or 3.14:</strong> Taichi won't run on it. Go back to
-          step 1 and install 3.12 as well (it can sit next to the newer one, no conflict).
+          <strong><code>python --version</code> says 3.13 or 3.14:</strong> no reinstall needed. Run{" "}
+          <code>pip install uv</code> once, then run sims with{" "}
+          <code>uv run --python 3.12 --with taichi main.py</code>. Full explanation in the callout under
+          step 1.
         </li>
         <li>
           <strong>Terminal shows a red error:</strong> copy the error, paste it into Antigravity's chat, say
