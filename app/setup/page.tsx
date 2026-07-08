@@ -134,7 +134,7 @@ git config --global user.email "you@example.com"`}</code></pre>
         <li>Pick a username and password.</li>
         <li>Enter the code GitHub emails you. Skip every "personalize your experience" screen.</li>
         <li>
-          Stay logged in on your browser — you'll come back here in Phase 2 to create a repo.
+          Stay logged in on your browser — you'll come back to create a repo for your sim later.
         </li>
       </ol>
 
@@ -191,7 +191,7 @@ git config --global user.email "you@example.com"`}</code></pre>
       </Callout>
 
       {/* Verify */}
-      <h2>5 · Verify (Phase 1 submission)</h2>
+      <h2>5 · Verify</h2>
       <ol>
         <li>In Antigravity, open the terminal at the bottom (View → Terminal, or <kbd className="kbd">Ctrl</kbd>+<kbd className="kbd">`</kbd>).</li>
         <li>
@@ -208,15 +208,13 @@ git --version`}</code></pre>
           step from the callout in step 1 — that's your Taichi ticket.)
         </li>
         <li>
-          Screenshot the terminal. Upload it on{" "}
-          <Link href="/phase/1" className="text-accent">
-            Phase 1
-          </Link>
-          . Once an admin approves, you're all clear for the workshop.
+          If both commands work, you're ready. Head to <Link href="/workshop" className="text-accent">Build</Link> when
+          you want to start your sim, and submit the final one on{" "}
+          <Link href="/submit" className="text-accent">Submit</Link> whenever it's done.
         </li>
       </ol>
 
-      <MediaSlot kind="video" src="https://youtu.be/e8p9elH3L-o" caption="watch: verify install + submit Phase 1" />
+      <MediaSlot kind="video" src="https://youtu.be/e8p9elH3L-o" caption="watch: verify install" />
 
       <Callout kind="check" title="About Taichi">
         You don't install Taichi now. When we start vibecoding during the workshop, Antigravity's agent will run{" "}
@@ -261,10 +259,10 @@ git --version`}</code></pre>
 
       <div className="mt-10 flex flex-wrap gap-3">
         <Link
-          href="/phase/1"
+          href="/workshop"
           className="px-4 py-2 rounded-md bg-accent text-black font-bold text-sm shadow-[0_0_24px_-4px_rgba(255,106,61,0.7)] hover:bg-accent/90"
         >
-          submit Phase 1 →
+          start building →
         </Link>
         <Link href="/chat" className="btn-ghost">
           ask in chat

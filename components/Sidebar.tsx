@@ -19,9 +19,7 @@ const SECTIONS: { label: string; links: { href: string; label: string; n?: strin
   {
     label: "your progress",
     links: [
-      { href: "/phase/1", label: "Phase 1 · Setup check" },
-      { href: "/phase/2", label: "Phase 2 · First sim", locked: true },
-      { href: "/submit", label: "Submit", locked: true },
+      { href: "/submit", label: "Submit" },
     ],
   },
   {

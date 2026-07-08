@@ -5,14 +5,13 @@ const LINKS = [
   { href: "/", label: "Home" },
   { href: "/setup", label: "Setup" },
   { href: "/workshop", label: "Build" },
-  { href: "/phase/1", label: "Phase 1" },
-  { href: "/phase/2", label: "Phase 2" },
   { href: "/hackathon", label: "Hackathon" },
   { href: "/chat", label: "Chat" },
   { href: "/participants", label: "People" },
   { href: "/gallery", label: "Gallery" },
   { href: "/submit", label: "Submit" },
 ];
+// ponytail: phase links removed mid-workshop; submission is directly open.
 
 export default async function MobileNav() {
   const supabase = supabaseServer();
