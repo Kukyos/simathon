@@ -13,6 +13,7 @@ export default function DetailClient({
   initialReactions,
   initialStatus,
   initialNote,
+  initialLate = false,
 }: {
   submissionId: string;
   userEmail: string;
@@ -20,11 +21,13 @@ export default function DetailClient({
   initialReactions: Reaction[];
   initialStatus: "pending" | "approved" | "rejected";
   initialNote: string | null;
+  initialLate?: boolean;
 }) {
   const router = useRouter();
   const [reactions, setReactions] = useState<Reaction[]>(initialReactions);
   const [status, setStatus] = useState(initialStatus);
   const [note, setNote] = useState(initialNote ?? "");
+  const [late, setLate] = useState(initialLate);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const supabase = supabaseBrowser();
@@ -82,7 +85,11 @@ export default function DetailClient({
     }
   }
 
-  async function setGalleryStatus(next: "approved" | "rejected" | "pending", askNote = false) {
+  async function setGalleryStatus(
+    next: "approved" | "rejected" | "pending",
+    askNote = false,
+    asLate = late, // approve keeps the current late flag unless told otherwise
+  ) {
     let n = note;
     if (askNote && next === "rejected") {
       const prompt = window.prompt(
@@ -96,7 +103,11 @@ export default function DetailClient({
     setErr(null);
     const { error } = await supabase
       .from("submissions")
-      .update({ gallery_status: next, gallery_note: next === "rejected" ? n : null })
+      .update({
+        gallery_status: next,
+        gallery_note: next === "rejected" ? n : null,
+        is_late: asLate,
+      })
       .eq("id", submissionId);
     setBusy(false);
     if (error) {
@@ -104,6 +115,7 @@ export default function DetailClient({
       return;
     }
     setStatus(next);
+    setLate(asLate);
     if (next !== "rejected") setNote("");
     router.refresh();
   }
@@ -160,15 +172,27 @@ export default function DetailClient({
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
             <button
-              disabled={busy || status === "approved"}
-              onClick={() => setGalleryStatus("approved")}
+              disabled={busy || (status === "approved" && !late)}
+              onClick={() => setGalleryStatus("approved", false, false)}
               className={`px-3 py-1.5 rounded-md border ${
-                status === "approved"
+                status === "approved" && !late
                   ? "border-green-400/60 bg-green-500/15 text-green-200"
                   : "border-white/10 hover:bg-white/5"
               } disabled:opacity-50`}
             >
               approve
+            </button>
+            <button
+              disabled={busy || (status === "approved" && late)}
+              onClick={() => setGalleryStatus("approved", false, true)}
+              className={`px-3 py-1.5 rounded-md border ${
+                status === "approved" && late
+                  ? "border-orange-400/60 bg-orange-500/15 text-orange-200"
+                  : "border-orange-500/40 text-orange-300 hover:bg-orange-500/10"
+              } disabled:opacity-50`}
+              title="Approve, but publicly tag it as submitted after the deadline"
+            >
+              approve as late
             </button>
             <button
               disabled={busy || status === "rejected"}
@@ -197,7 +221,7 @@ export default function DetailClient({
             </button>
           </div>
           <div className="text-[11px] text-muted mt-2">
-            current: <span className="text-ink/80">{status}</span>
+            current: <span className="text-ink/80">{status}{late ? " (late)" : ""}</span>
             {status === "rejected" && note && <> · note: <span className="text-ink/80">{note}</span></>}
           </div>
         </div>

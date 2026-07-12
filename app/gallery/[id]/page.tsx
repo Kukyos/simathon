@@ -100,7 +100,14 @@ export default async function SubmissionPage({ params }: { params: { id: string 
       )}
 
       <div className="mt-4 text-xs uppercase tracking-[0.2em] text-accent2">submission</div>
-      <h1 className="text-3xl font-bold mt-1">{s.title}</h1>
+      <h1 className="text-3xl font-bold mt-1 flex items-center gap-3 flex-wrap">
+        {s.title}
+        {s.is_late === true && (
+          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded border border-orange-400/50 bg-orange-500/10 text-orange-300">
+            late submission
+          </span>
+        )}
+      </h1>
       <p className="text-ink/85 mt-2 text-[15px]">{s.tagline}</p>
       <div className="text-xs text-muted mt-2">by {author}</div>
 
@@ -111,6 +118,7 @@ export default async function SubmissionPage({ params }: { params: { id: string 
         initialReactions={(reactions ?? []) as any}
         initialStatus={status}
         initialNote={s.gallery_note ?? null}
+        initialLate={s.is_late === true}
       />
 
       {embed && (

@@ -19,11 +19,13 @@ export default function AdminPanel({
   pending,
   signupsOpen,
   chatLocked,
+  submissionsLocked,
 }: {
   participants: ParticipantRow[];
   pending: PendingRow[];
   signupsOpen: boolean;
   chatLocked: boolean;
+  submissionsLocked: boolean;
 }) {
   const supabase = supabaseBrowser();
   const router = useRouter();
@@ -36,6 +38,28 @@ export default function AdminPanel({
   const [lockBusy, setLockBusy] = useState(false);
   const [chatLock, setChatLock] = useState(chatLocked);
   const [chatBusy, setChatBusy] = useState(false);
+  const [subLock, setSubLock] = useState(submissionsLocked);
+  const [subBusy, setSubBusy] = useState(false);
+
+  async function toggleSubmissionsLock() {
+    const next = !subLock;
+    if (
+      !confirm(
+        next
+          ? "LOCK submissions? Nobody (except admins) will be able to submit or edit anything — the submit button goes dead site-wide. Existing submissions are untouched."
+          : "UNLOCK submissions? Everyone can submit and edit again."
+      )
+    )
+      return;
+    setSubBusy(true);
+    const { error } = await supabase.rpc("admin_set_submissions_locked", { p_locked: next });
+    setSubBusy(false);
+    if (error) setMsg(error.message);
+    else {
+      setSubLock(next);
+      startTransition(() => router.refresh());
+    }
+  }
 
   async function toggleChatLock() {
     setChatBusy(true);
@@ -235,6 +259,35 @@ export default function AdminPanel({
           }`}
         >
           {chatBusy ? "…" : chatLock ? "Unlock chat" : "Lock chat"}
+        </button>
+      </div>
+
+      {/* Submission lock */}
+      <div
+        className={`mt-3 rounded-xl border p-3 flex items-center justify-between gap-3 ${
+          subLock ? "border-red-500/40 bg-red-500/5" : "border-white/10 bg-panel/40"
+        }`}
+      >
+        <div>
+          <div className="text-sm font-semibold text-ink">
+            Submissions: {subLock ? "🔒 LOCKED" : "🟢 open"}
+          </div>
+          <div className="text-xs text-muted mt-0.5">
+            {subLock
+              ? "Nobody can submit or edit. Existing submissions are safe and visible. You (admin) can still moderate + approve-as-late."
+              : "Everyone can submit and edit. Hit lock when the deadline passes — it's instant and reversible."}
+          </div>
+        </div>
+        <button
+          onClick={toggleSubmissionsLock}
+          disabled={subBusy}
+          className={`shrink-0 px-3 py-1.5 rounded text-sm font-semibold disabled:opacity-50 ${
+            subLock
+              ? "bg-accent text-black"
+              : "border border-red-500/40 text-red-200 hover:bg-red-500/10"
+          }`}
+        >
+          {subBusy ? "…" : subLock ? "Unlock submissions" : "Lock submissions"}
         </button>
       </div>
 

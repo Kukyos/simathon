@@ -22,7 +22,8 @@ export default async function GalleryPage() {
   // Admins see every submission (so they can moderate). Everyone else only sees approved.
   let q = supabase
     .from("submissions")
-    .select("id,title,tagline,display_name,user_email,screenshot_url,gallery_status")
+    // ponytail: select * so the page can't break if migration 022 (is_late) hasn't run yet
+    .select("*")
     .order("created_at", { ascending: false });
   if (!isAdmin) q = q.eq("gallery_status", "approved");
 

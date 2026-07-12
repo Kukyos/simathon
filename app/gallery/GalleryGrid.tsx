@@ -12,6 +12,7 @@ type Sub = {
   user_email: string;
   screenshot_url: string | null;
   gallery_status?: "pending" | "approved" | "rejected";
+  is_late?: boolean;
 };
 
 type Reaction = {
@@ -30,6 +31,7 @@ export default function GalleryGrid({
   initialReactions: Reaction[];
 }) {
   const [reactions, setReactions] = useState<Reaction[]>(initialReactions);
+  const [sort, setSort] = useState<"newest" | "likes">("newest");
   const supabase = supabaseBrowser();
 
   useEffect(() => {
@@ -92,9 +94,32 @@ export default function GalleryGrid({
     }
   }
 
+  // subs arrive newest-first from the server; "likes" re-sorts client-side
+  const sorted =
+    sort === "likes"
+      ? [...subs].sort((a, b) => (byId.get(b.id)?.like ?? 0) - (byId.get(a.id)?.like ?? 0))
+      : subs;
+
   return (
-    <div className="mt-6 columns-1 sm:columns-2 lg:columns-3 gap-3 [column-fill:_balance]">
-      {subs.map((s) => {
+    <>
+    <div className="mt-5 flex items-center gap-2 text-xs">
+      <span className="text-muted">sort:</span>
+      {(["newest", "likes"] as const).map((v) => (
+        <button
+          key={v}
+          onClick={() => setSort(v)}
+          className={`px-2.5 py-1 rounded-md border transition ${
+            sort === v
+              ? "border-accent/60 bg-accent/10 text-accent"
+              : "border-white/10 text-ink/70 hover:bg-white/5"
+          }`}
+        >
+          {v === "likes" ? "♥ most liked" : "newest"}
+        </button>
+      ))}
+    </div>
+    <div className="mt-3 columns-1 sm:columns-2 lg:columns-3 gap-3 [column-fill:_balance]">
+      {sorted.map((s) => {
         const r = byId.get(s.id) ?? { like: 0, dislike: 0, mine: null };
         return (
           <div
@@ -127,7 +152,14 @@ export default function GalleryGrid({
                 </div>
               )}
               <div className="p-3">
-                <div className="font-semibold text-ink group-hover:text-accent leading-snug">{s.title}</div>
+                <div className="font-semibold text-ink group-hover:text-accent leading-snug">
+                  {s.title}
+                  {s.is_late === true && (
+                    <span className="ml-2 align-middle text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border border-orange-400/50 bg-orange-500/10 text-orange-300">
+                      late
+                    </span>
+                  )}
+                </div>
                 <div className="text-xs text-ink/75 mt-1 line-clamp-2">{s.tagline}</div>
                 <div className="text-[11px] text-muted mt-2">
                   by {s.display_name || s.user_email.split("@")[0]}
@@ -162,5 +194,6 @@ export default function GalleryGrid({
         );
       })}
     </div>
+    </>
   );
 }

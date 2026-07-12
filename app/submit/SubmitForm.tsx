@@ -39,9 +39,11 @@ function looksLikeUrl(s: string) {
 export default function SubmitForm({
   initial,
   userEmail,
+  locked = false,
 }: {
   initial: Submission | null;
   userEmail: string;
+  locked?: boolean;
 }) {
   const [form, setForm] = useState<Submission>(initial ?? empty);
   // Was the participant rejected before this edit? If so, resubmitting flips status back to pending.
@@ -59,6 +61,7 @@ export default function SubmitForm({
   const folder = userEmail.replace(/[^a-z0-9._-]/gi, "_");
 
   async function uploadScreenshot(file: File) {
+    if (locked) return;
     if (file.size > 5_000_000) {
       setMsg({ kind: "err", text: "Screenshot must be under 5 MB. Try a JPG export." });
       return;
@@ -82,6 +85,7 @@ export default function SubmitForm({
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (locked) return; // real enforcement is the DB trigger; this is just courtesy
 
     if (!looksLikeUrl(form.video_url || "")) {
       setMsg({ kind: "err", text: "Video link doesn't look like a URL." });
@@ -129,7 +133,9 @@ export default function SubmitForm({
   }
 
   return (
-    <form onSubmit={save} className="space-y-5 mt-6 not-prose">
+    <form onSubmit={save} className="mt-6 not-prose">
+    {/* ponytail: native fieldset[disabled] kills every input + the submit button in one move */}
+    <fieldset disabled={locked} className={`space-y-5 ${locked ? "opacity-50" : ""}`}>
       <Field label="Display name" hint="What goes on the leaderboard. Default: your email username.">
         <input value={form.display_name ?? ""} onChange={set("display_name")} className={input} placeholder="e.g. Anika R." />
       </Field>
@@ -198,10 +204,10 @@ export default function SubmitForm({
       <div className="flex gap-3 items-center">
         <button
           type="submit"
-          disabled={saving || !!progress}
-          className="px-5 py-2.5 rounded-md bg-accent text-black font-semibold disabled:opacity-50"
+          disabled={locked || saving || !!progress}
+          className="px-5 py-2.5 rounded-md bg-accent text-black font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {saving ? "Saving..." : initial ? "Update submission" : "Submit"}
+          {locked ? "Submissions closed" : saving ? "Saving..." : initial ? "Update submission" : "Submit"}
         </button>
         {msg && (
           <span className={msg.kind === "ok" ? "text-green-400 text-sm" : "text-red-400 text-sm"}>
@@ -209,6 +215,7 @@ export default function SubmitForm({
           </span>
         )}
       </div>
+    </fieldset>
     </form>
   );
 }

@@ -12,11 +12,10 @@ export default async function SubmitPage() {
   const myEmail = user.email!.toLowerCase();
 
   // ponytail: phase gate removed post-launch; submission is directly open.
-  const { data: existing } = await supabase
-    .from("submissions")
-    .select("*")
-    .eq("user_email", myEmail)
-    .maybeSingle();
+  const [{ data: existing }, { data: locked }] = await Promise.all([
+    supabase.from("submissions").select("*").eq("user_email", myEmail).maybeSingle(),
+    supabase.rpc("submissions_locked"),
+  ]);
 
   const galleryStatus: "pending" | "approved" | "rejected" | null =
     (existing as any)?.gallery_status ?? null;
@@ -24,11 +23,24 @@ export default async function SubmitPage() {
 
   return (
     <div className="max-w-2xl">
-      <div className="text-xs uppercase tracking-[0.2em] text-accent2">submission · unlocked</div>
+      <div className="text-xs uppercase tracking-[0.2em] text-accent2">
+        submission · {locked === true ? "closed" : "open"}
+      </div>
       <h1 className="text-3xl font-bold mt-1">Submit your sim</h1>
       <p className="text-ink/80 mt-2 text-sm">
-        Submitting as <span className="text-ink">{user.email}</span>. Edit anytime until the deadline.
+        Submitting as <span className="text-ink">{user.email}</span>.{" "}
+        {locked === true ? "The deadline has passed." : "Edit anytime until the deadline."}
       </p>
+
+      {locked === true && (
+        <div className="mt-4 rounded-md border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+          <div className="font-semibold">Submissions are closed.</div>
+          <div className="mt-1 text-red-100/85">
+            The deadline (Sunday, July 12, 11:59 PM IST) has passed. Nothing can be submitted or
+            edited anymore. If something genuinely went wrong on the site, message the organizers.
+          </div>
+        </div>
+      )}
 
       {galleryStatus === "pending" && (
         <div className="mt-4 rounded-md border border-yellow-500/40 bg-yellow-500/5 px-3 py-2 text-sm text-yellow-200">
@@ -77,7 +89,7 @@ export default async function SubmitPage() {
         </div>
       </div>
 
-      <SubmitForm initial={(existing as any) ?? null} userEmail={myEmail} />
+      <SubmitForm initial={(existing as any) ?? null} userEmail={myEmail} locked={locked === true} />
     </div>
   );
 }
