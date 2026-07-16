@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
-const GATED_PREFIXES = ["/chat", "/submit", "/gallery", "/participants", "/phase", "/admin"];
+const GATED_PREFIXES = ["/chat", "/submit", "/gallery", "/participants", "/phase", "/admin", "/result"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });

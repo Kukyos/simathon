@@ -20,6 +20,7 @@ const SECTIONS: { label: string; links: { href: string; label: string; n?: strin
     label: "your progress",
     links: [
       { href: "/submit", label: "Submit" },
+      { href: "/result", label: "Your result" },
     ],
   },
   {
